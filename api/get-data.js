@@ -6,15 +6,13 @@ const redis = new Redis({
 });
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { username, type } = req.query;
+    const { username } = req.query;
     
-    // Fetch from Redis
-    const data = await redis.get(`werewolf_${type}_${username}`);
+    // Fetch the combined profile
+    const data = await redis.get(`werewolf_profile_${username}`);
     
     return res.status(200).json({ data });
   } catch (error) {
