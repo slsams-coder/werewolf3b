@@ -6,16 +6,13 @@ const redis = new Redis({
 });
 
 export default async function handler(req, res) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { username, data, type } = req.body;
+    const { username, data } = req.body;
     
-    // Save to Redis using a unique key per user and data type
-    await redis.set(`werewolf_${type}_${username}`, JSON.stringify(data));
+    // Save the entire profile (including password) to a single Redis key
+    await redis.set(`werewolf_profile_${username}`, JSON.stringify(data));
     
     return res.status(200).json({ success: true });
   } catch (error) {
