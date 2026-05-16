@@ -1,0 +1,10 @@
+{
+  "name": "werewolf-manager",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "echo 'Static HTML site, no start script needed.'"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.28.0"
+  }
+}
