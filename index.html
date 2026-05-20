@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Werewolf Tournament Manager</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -34,32 +35,8 @@
         const Plus = (p) => <Icon {...p} path={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />;
         const Trash2 = (p) => <Icon {...p} path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>} />;
         const LogOut = (p) => <Icon {...p} path={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />;
-        const Lock = (p) => <Icon {...p} path={<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>} />;
 
-        // The Custom Auto-Scaling Default Roles
-        const INITIAL_ROLES = [
-            "Werewolf",
-            "Serial Killer",
-            "Seer",
-            "Doctor",
-            "Witch",
-            "Hunter",
-            "Fool",
-            "Werewolf",
-            "Doctor",
-            "Prince",
-            "Red Lady",
-            "Cupid",
-            "Cursed One",
-            "Shepherd",
-            "Werewolf (Hunter)",
-            "Seer",
-            "Sheriff",
-            "Werewolf (cub)",
-            "Knight",
-            "Villager"
-        ];
-
+        const INITIAL_ROLES = ["Werewolf", "Serial Killer", "Seer", "Doctor", "Witch", "Hunter", "Fool", "Werewolf", "Doctor", "Prince", "Red Lady", "Cupid", "Cursed One", "Shepherd", "Werewolf (Hunter)", "Seer", "Sheriff", "Werewolf (cub)", "Knight", "Villager"];
         const AVAILABLE_ROLES_LIST = ["Werewolf", "Werewolf (Hunter)", "Werewolf (cub)", "Villager", "Seer", "Doctor", "Cupid", "Witch", "Hunter", "Red Lady", "Serial Killer", "Fool", "Prince", "Cursed One", "Shepherd", "Knight", "Sheriff"];
         const DEFAULT_CLASSES = ["1A", "1B", "1C", "1D", "2A", "2B", "2C", "2D", "3A", "3B", "3C", "3D", "4A", "4B", "4C", "4D", "5A", "5B", "5C", "5D"];
         const NIGHT_ORDER = ["Cupid", "Serial Killer", "Werewolves", "Doctor", "Seer", "Witch", "Red Lady"];
@@ -78,9 +55,8 @@
 
         const App = () => {
             const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [isLoading, setIsLoading] = useState(false);
-            const [username, setUsername] = useState("");
-            const [password, setPassword] = useState("");
+            const [isLoading, setIsLoading] = useState(true);
+            const [userEmail, setUserEmail] = useState("");
             const [loginError, setLoginError] = useState("");
 
             const [activeRound, setActiveRound] = useState(1);
@@ -99,94 +75,111 @@
             const [rosterDraftName, setRosterDraftName] = useState("");
             const [rosterDraftPlayers, setRosterDraftPlayers] = useState("");
 
-            const handleLogin = async (e) => {
-                e.preventDefault();
-                const user = username.trim().toLowerCase();
-                const pass = password.trim();
-                if (!user || !pass) return;
-                
-                setIsLoading(true);
-                setLoginError("");
-
-                try {
-                    let profile = null;
-
-                    // 1. Try fetching from Upstash API
+            // 1. Check if a session already exists on page load
+            useEffect(() => {
+                const checkSession = async () => {
                     try {
-                        const res = await fetch(`/api/get-data?username=${user}`);
+                        const res = await fetch('/api/get-data');
                         if (res.ok) {
                             const r = await res.json();
                             if (r.data) {
-                                profile = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+                                const profile = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+                                setRosters(profile.rosters || getInitialRosters());
+                                setRoundsData(profile.roundsData || getInitialRounds());
+                                setRoleDeck(profile.roleDeck || getInitialDeck());
+                                setUseDefaultRoles(profile.useDefaultRoles !== undefined ? profile.useDefaultRoles : true);
+                                if (profile.email) setUserEmail(profile.email);
+                                setIsLoggedIn(true);
                             }
                         }
-                    } catch (apiError) {
-                        console.warn("Could not reach API. Falling back to local device storage.", apiError);
+                    } catch (e) {
+                        console.warn("No active session found.");
+                    } finally {
+                        setIsLoading(false);
                     }
+                };
+                checkSession();
+            }, []);
+
+            // 2. Render Google Button if not logged in
+            useEffect(() => {
+                if (!isLoading && !isLoggedIn && window.google) {
+                    window.google.accounts.id.initialize({
+                        client_id: "536909690413-i1jho0bc3dspomfubh821gr80qns8laj.apps.googleusercontent.com",  // <--- ADD YOUR CLIENT ID HERE
+                        callback: handleGoogleResponse
+                    });
+                    window.google.accounts.id.renderButton(
+                        document.getElementById("google-signin-button"),
+                        { theme: "outline", size: "large", width: 250 }
+                    );
+                }
+            }, [isLoading, isLoggedIn]);
+
+            // 3. Handle the Google Popup Response
+            const handleGoogleResponse = async (response) => {
+                setIsLoading(true);
+                setLoginError("");
+                try {
+                    // Send Google's token to our Vercel Backend
+                    const loginRes = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ credential: response.credential })
+                    });
                     
-                    // 2. Fallback to local storage
-                    if (!profile) {
-                        const local = localStorage.getItem(`werewolf_profile_${user}`);
-                        if (local) {
-                            try { profile = JSON.parse(local); } catch (parseError) {}
-                        }
-                    }
+                    if (loginRes.ok) {
+                        const { email } = await loginRes.json();
+                        setUserEmail(email);
 
-                    // 3. Process the Profile Data
-                    if (profile) {
-                        if (profile.password !== pass) {
-                            setLoginError("Incorrect password.");
-                            setIsLoading(false);
-                            return;
+                        // Fetch their Upstash data using the new secure cookie
+                        const dataRes = await fetch('/api/get-data');
+                        if (dataRes.ok) {
+                            const r = await dataRes.json();
+                            if (r.data) {
+                                const profile = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+                                setRosters(profile.rosters || getInitialRosters());
+                                setRoundsData(profile.roundsData || getInitialRounds());
+                                setRoleDeck(profile.roleDeck || getInitialDeck());
+                                setUseDefaultRoles(profile.useDefaultRoles !== undefined ? profile.useDefaultRoles : true);
+                            }
                         }
-                        setRosters(profile.rosters || getInitialRosters());
-                        setRoundsData(profile.roundsData || getInitialRounds());
-                        setRoleDeck(profile.roleDeck || getInitialDeck());
-                        setUseDefaultRoles(profile.useDefaultRoles !== undefined ? profile.useDefaultRoles : true);
+                        setIsLoggedIn(true);
                     } else {
-                        // Brand new user
-                        setRosters(getInitialRosters());
-                        setRoundsData(getInitialRounds());
-                        setRoleDeck(getInitialDeck());
-                        setUseDefaultRoles(true);
+                        setLoginError("Login verified failed.");
                     }
-
-                    setIsLoggedIn(true);
                 } catch (err) {
-                    console.error("Login failed completely", err);
-                    setLoginError("An unexpected error occurred while loading your profile.");
+                    setLoginError("Could not connect to database.");
                 }
                 setIsLoading(false);
             };
 
-            // Unified Save Effect
+            const handleLogout = async () => {
+                await fetch('/api/logout', { method: 'POST' });
+                setIsLoggedIn(false);
+                setUserEmail("");
+                setRosters(getInitialRosters()); setRoundsData(getInitialRounds());
+                setRoleDeck(getInitialDeck()); setUseDefaultRoles(true); setActiveRound(1);
+            };
+
+            // 4. Save to DB automatically whenever data changes
             useEffect(() => {
                 if (!isLoggedIn) return;
 
-                const user = username.trim().toLowerCase();
-                const profileData = { password: password.trim(), rosters, roundsData, roleDeck, useDefaultRoles };
-
-                localStorage.setItem(`werewolf_profile_${user}`, JSON.stringify(profileData));
+                const profileData = { email: userEmail, rosters, roundsData, roleDeck, useDefaultRoles };
+                localStorage.setItem('werewolf_backup', JSON.stringify(profileData)); // Optional Local Backup
 
                 const timer = setTimeout(async () => {
                     try {
                         await fetch('/api/save-data', { 
                             method: 'POST', 
                             headers: { 'Content-Type': 'application/json' }, 
-                            body: JSON.stringify({ username: user, data: profileData }) 
+                            body: JSON.stringify({ data: profileData }) 
                         }).catch(()=>null);
                     } catch(e) {}
                 }, 1500);
 
                 return () => clearTimeout(timer);
-            }, [rosters, roundsData, roleDeck, useDefaultRoles, isLoggedIn, username, password]);
-
-            const handleLogout = () => {
-                setIsLoggedIn(false);
-                setUsername(""); setPassword(""); setLoginError("");
-                setRosters(getInitialRosters()); setRoundsData(getInitialRounds());
-                setRoleDeck(getInitialDeck()); setUseDefaultRoles(true); setActiveRound(1);
-            };
+            }, [rosters, roundsData, roleDeck, useDefaultRoles, isLoggedIn, userEmail]);
 
             if (!isLoggedIn) {
                 return (
@@ -196,27 +189,15 @@
                                 <h1 className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase italic mb-2">Werewolf Hub</h1>
                                 <p className="text-slate-400">Tournament Manager</p>
                             </div>
-                            <form onSubmit={handleLogin} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-400 mb-2">Username</label>
-                                    <div className="relative">
-                                        <Users className="absolute left-3 top-3.5 text-slate-500" size={18} />
-                                        <input type="text" required className="w-full bg-slate-900 border border-slate-600 rounded-xl py-3 pl-10 pr-4 text-white outline-none focus:border-orange-500" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} />
-                                    </div>
+                            
+                            {isLoading ? (
+                                <div className="text-center text-slate-400 font-bold py-8">Checking Session...</div>
+                            ) : (
+                                <div className="flex flex-col items-center gap-4 py-4">
+                                    <div id="google-signin-button"></div>
+                                    {loginError && <div className="text-red-400 text-sm font-bold text-center bg-red-900/20 p-2 rounded-lg border border-red-900/50 w-full">{loginError}</div>}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-400 mb-2">Password</label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-3.5 text-slate-500" size={18} />
-                                        <input type="password" required className="w-full bg-slate-900 border border-slate-600 rounded-xl py-3 pl-10 pr-4 text-white outline-none focus:border-orange-500" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
-                                    </div>
-                                </div>
-                                {loginError && <div className="text-red-400 text-sm font-bold text-center bg-red-900/20 p-2 rounded-lg border border-red-900/50">{loginError}</div>}
-                                <button type="submit" disabled={isLoading} className={`w-full mt-2 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all ${isLoading ? 'bg-slate-600' : 'bg-orange-600 hover:bg-orange-500'}`}>
-                                    {isLoading ? 'Loading Profile...' : 'Login / Create Account'}
-                                </button>
-                                <p className="text-xs text-center text-slate-500 mt-4">If the username doesn't exist, a new account will be created automatically.</p>
-                            </form>
+                            )}
                         </div>
                     </div>
                 );
@@ -265,21 +246,14 @@
                 let rolesToUse = [];
 
                 if (useDefaultRoles) {
-                    // Logic 1: Use the Original Auto-Scaling Array
                     rolesToUse = [...INITIAL_ROLES].slice(0, count);
-                    
-                    // Fallback if more players than INITIAL_ROLES
-                    while (rolesToUse.length < count) {
-                        rolesToUse.push("Villager");
-                    }
+                    while (rolesToUse.length < count) rolesToUse.push("Villager");
                 } else {
-                    // Logic 2: Use the Custom Deck Builder Array
                     Object.entries(roleDeck).forEach(([role, amount]) => { for (let i = 0; i < amount; i++) rolesToUse.push(role); });
                     if (rolesToUse.length > count) rolesToUse = rolesToUse.slice(0, count); 
                     else while (rolesToUse.length < count) rolesToUse.push("Villager");
                 }
 
-                // Shuffle the Deck
                 for (let i = rolesToUse.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rolesToUse[i], rolesToUse[j]] = [rolesToUse[j], rolesToUse[i]]; }
                 
                 const newData = { ...roundsData }; let roleIdx = 0;
@@ -324,7 +298,7 @@
                 <header className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
                     <div>
                         <h1 className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase italic">Werewolf Hub</h1>
-                        <div className="flex items-center gap-2 text-slate-400 font-medium"><span>Host: <span className="text-white">{username}</span></span><button onClick={handleLogout} className="text-xs hover:text-red-400 ml-2" title="Logout"><LogOut size={14} /></button></div>
+                        <div className="flex items-center gap-2 text-slate-400 font-medium"><span>Host: <span className="text-white text-xs bg-slate-800 px-2 py-1 rounded-md">{userEmail}</span></span><button onClick={handleLogout} className="text-xs hover:text-red-400 ml-2" title="Logout"><LogOut size={14} /></button></div>
                     </div>
                     <div className="flex bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-700">
                     {[1, 2, 3, 4].map(r => ( <button key={r} onClick={() => setActiveRound(r)} className={`px-6 py-2 rounded-lg font-bold transition-all ${activeRound === r ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400'}`}>Round {r}</button> ))}
@@ -424,7 +398,6 @@
                                 ))}
                                 {activeSettingsTab === 'roles' && (
                                     <div className="space-y-4">
-                                        {/* Toggle Switch */}
                                         <div className="flex items-center justify-between bg-slate-900 border border-slate-700 p-4 rounded-xl">
                                             <div className="pr-4">
                                                 <div className="font-bold text-white">Use Default Role Progression</div>
