@@ -5,6 +5,7 @@
     "start": "echo 'Static HTML site, no start script needed.'"
   },
   "dependencies": {
-    "@upstash/redis": "^1.28.0"
+    "@upstash/redis": "^1.28.0",
+    "@vercel/analytics": "^2.0.1"
   }
 }
