@@ -5,6 +5,8 @@
     "start": "echo 'Static HTML site, no start script needed.'"
   },
   "dependencies": {
-    "@upstash/redis": "^1.28.0"
+    "@upstash/redis": "^1.28.0",
+    "google-auth-library": "^9.6.3",
+    "cookie": "^0.6.0"
   }
 }
