@@ -25,7 +25,7 @@
         const RotateCcw = (p) => <Icon {...p} path={<><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></>} />;
         const Play = (p) => <Icon {...p} path={<polygon points="5 3 19 12 5 21 5 3"/>} />;
         const Skull = (p) => <Icon {...p} path={<><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/></>} />;
-        const Moon = (p) => <Icon {...p} path={<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>} />;
+        const Moon = (p) => <Icon {...p} path={<path d="M12 3a6 6 0 0 0 9 9 9 9 1 1-9-9Z"/>} />;
         const Eye = (p) => <Icon {...p} path={<><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></>} />;
         const EyeOff = (p) => <Icon {...p} path={<><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></>} />;
         const CheckCircle2 = (p) => <Icon {...p} path={<><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></>} />;
@@ -133,7 +133,7 @@
             useEffect(() => {
                 if (!isLoading && appMode === 'landing' && window.google) {
                     window.google.accounts.id.initialize({
-                        client_id: "536909690413-i1jho0bc3dspomfubh821gr80qns8laj.apps.googleusercontent.com",  // <--- ADD YOUR CLIENT ID HERE
+                        client_id: "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE", 
                         callback: handleGoogleResponse
                     });
                     window.google.accounts.id.renderButton(
@@ -251,7 +251,7 @@
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Room Code</label>
-                                            <input type="text" maxLength="4" className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white text-xl font-bold uppercase text-center outline-none focus:border-blue-500" placeholder="ABCD" value={playerRoomInput} onChange={(e) => setPlayerRoomInput(e.target.value.toUpperCase().trim())} />
+                                            <input type="text" maxLength="4" className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white text-xl font-bold uppercase text-center outline-none focus:border-blue-500" placeholder="ABCD" value={playerRoomInput} onChange={(e) => setPlayerRoomInput(e.target.value.toUpperCase())} />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Your Name / Class</label>
@@ -260,7 +260,15 @@
                                     </div>
                                 </div>
                                 <button 
-                                    onClick={() => { if(playerRoomInput.trim() && playerNameInput.trim()) setAppMode('player'); }}
+                                    onClick={() => { 
+                                        const cleanRoom = playerRoomInput.trim().toUpperCase();
+                                        const cleanName = playerNameInput.trim();
+                                        if(cleanRoom && cleanName) {
+                                            setPlayerRoomInput(cleanRoom);
+                                            setPlayerNameInput(cleanName);
+                                            setAppMode('player'); 
+                                        }
+                                    }}
                                     className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all"
                                 >
                                     Connect Device
@@ -293,6 +301,11 @@
                     if (role.includes("Werewolf")) return ROLE_DESCRIPTIONS["Werewolf"];
                     return ROLE_DESCRIPTIONS[role] || "";
                 };
+
+                // CRITICAL FIX: Match the typed player name with the host's actual roster casing rules
+                const resolvedPlayerName = (playerData && playerData.alivePlayers)
+                    ? (playerData.alivePlayers.find(p => p.toLowerCase() === playerNameInput.toLowerCase().trim()) || playerNameInput.trim())
+                    : playerNameInput.trim();
 
                 return (
                     <div className="min-h-screen flex flex-col items-center justify-start py-12 px-6 bg-slate-950 relative overflow-y-auto">
@@ -343,7 +356,7 @@
                                                     fetch('/api/player-action', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: playerNameInput.trim(), action: 'REVEAL_SHERIFF' })
+                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: resolvedPlayerName, action: 'REVEAL_SHERIFF' })
                                                     });
                                                     setPlayerData(prev => ({...prev, hasRevealedSheriff: true}));
                                                 }
@@ -391,14 +404,14 @@
                                                     fetch('/api/player-action', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: playerNameInput.trim(), action: 'VOTE', target })
+                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: resolvedPlayerName, action: 'VOTE', target })
                                                     });
                                                     setPlayerData(prev => ({...prev, myVote: target}));
                                                 }}
                                                 value={playerData.myVote || ""}
                                             >
                                                 <option value="" disabled>Select who to lynch...</option>
-                                                {playerData.alivePlayers && playerData.alivePlayers.filter(p => p.toLowerCase() !== playerNameInput.toLowerCase().trim()).map(p => (
+                                                {playerData.alivePlayers && playerData.alivePlayers.filter(p => p.toLowerCase() !== resolvedPlayerName.toLowerCase()).map(p => (
                                                     <option key={p} value={p}>{p}</option>
                                                 ))}
                                             </select>
@@ -420,23 +433,32 @@
             // --- HOST SCREEN ---
             const currentRound = roundsData[activeRound];
 
+            // CRITICAL FIX: Make vote lookups case-insensitive
             const getPlayerVote = (playerClass) => {
-                const voteKey = Object.keys(clientState.votes || {}).find(k => k.toLowerCase() === playerClass.toLowerCase());
-                return voteKey ? clientState.votes[voteKey] : null;
+                const voteKey = Object.keys(clientState.votes || {}).find(k => k.toLowerCase() === playerClass.toLowerCase().trim());
+                if (!voteKey) return null;
+                const rawTarget = clientState.votes[voteKey];
+                const targetObj = currentRound.players.find(p => p.class.toLowerCase() === rawTarget.toLowerCase().trim());
+                return targetObj ? targetObj.class : rawTarget;
             };
 
             const isRevealedSheriff = (playerClass) => {
-                return (clientState.revealedSheriffs || []).some(s => s.toLowerCase() === playerClass.toLowerCase());
+                return (clientState.revealedSheriffs || []).some(s => s.toLowerCase() === playerClass.toLowerCase().trim());
             };
 
+            // CRITICAL FIX: Make vote counting completely casing-robust
             const getVoteTally = () => {
                 const tally = {};
                 Object.entries(clientState.votes || {}).forEach(([voter, target]) => {
                     const voterObj = currentRound.players.find(p => p.class.toLowerCase() === voter.toLowerCase().trim());
                     if (voterObj && voterObj.isAlive) {
                         let weight = 1;
-                        if (isRevealedSheriff(voter)) weight = 2; // Sheriff counts as 2
-                        tally[target] = (tally[target] || 0) + weight;
+                        if (isRevealedSheriff(voterObj.class)) weight = 2;
+                        
+                        const targetObj = currentRound.players.find(p => p.class.toLowerCase() === target.toLowerCase().trim());
+                        if (targetObj) {
+                            tally[targetObj.class] = (tally[targetObj.class] || 0) + weight;
+                        }
                     }
                 });
                 return tally;
@@ -518,7 +540,6 @@
                 setClientState({ votes: {}, revealedSheriffs: [] });
             };
 
-            // REVERTED THE BUG FIX: Removed the confirmation prompt for marking a player as dead
             const toggleAlive = (index) => {
                 const newData = { ...roundsData }; 
                 const player = newData[activeRound].players[index];
