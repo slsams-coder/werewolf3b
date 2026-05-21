@@ -1,33 +1,33 @@
-// 1. Add this at the top of your server file to store the locks
-const sessionLocks = {}; // Example format: { "ABCD_ann": "device12345" }
+// Make sure this is at the top of your file, NOT inside the app.get function!
+const sessionLocks = {}; 
 
-// 2. Update your /api/get-role endpoint to check the Dibs lock
 app.get('/api/get-role', (req, res) => {
-    const { roomCode, playerName, deviceId } = req.query;
-    
-    // Normalize the lock key so capitalization doesn't bypass it
-    const lockKey = `${roomCode.toUpperCase()}_${playerName.toLowerCase().trim()}`;
-
-    // --- THE DIBS LOGIC ---
-    if (!sessionLocks[lockKey]) {
-        // If the name is unclaimed, this device claims it!
-        sessionLocks[lockKey] = deviceId; 
-    } else if (sessionLocks[lockKey] !== deviceId) {
-        // If someone else already claimed it, reject them!
-        return res.status(403).json({ error: "This name is already connected on another device!" });
-    }
-    // ----------------------
-
-    // ... (Keep the rest of your existing logic to send back the player's role)
-});
-
-// 3. IMPORTANT: When the Host resets the game or generates a new room, clear the locks!
-// Add this inside your '/api/player-action' endpoint under your 'RESET_ALL' action:
-if (action === 'RESET_ALL') {
-    Object.keys(sessionLocks).forEach(key => {
-        if (key.startsWith(`${roomCode.toUpperCase()}_`)) {
-            delete sessionLocks[key];
+    try {
+        // 1. Safely extract variables (ensure you only declare this ONCE in this route)
+        const { roomCode, playerName, deviceId } = req.query;
+        
+        // 2. Safety Check: Prevent server crash if data is missing
+        if (!roomCode || !playerName || !deviceId) {
+            return res.status(400).json({ error: "Missing connection data." });
         }
-    });
-    // ... (Keep your existing reset logic)
-}
+
+        // 3. Normalize the lock key securely
+        const lockKey = `${roomCode.toUpperCase()}_${playerName.toLowerCase().trim()}`;
+
+        // 4. --- THE DIBS LOGIC ---
+        if (!sessionLocks[lockKey]) {
+            sessionLocks[lockKey] = deviceId; 
+        } else if (sessionLocks[lockKey] !== deviceId) {
+            return res.status(403).json({ error: "This name is already connected on another device!" });
+        }
+
+        // 5. --- YOUR EXISTING LOGIC GOES HERE ---
+        // (Don't forget this part! You still need to look up the player 
+        // in your roundsData and send their role back via res.json({...}))
+
+    } catch (error) {
+        // This stops the server from shutting down if something goes wrong
+        console.error("Server error in get-role:", error);
+        res.status(500).json({ error: "Backend crash prevented." });
+    }
+});
