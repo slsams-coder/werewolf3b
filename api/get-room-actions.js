@@ -10,9 +10,26 @@ export default async function handler(req, res) {
 
   try {
     const { roomCode } = req.query;
-    const state = await redis.get(`room_${roomCode.toUpperCase()}_client_state`) || { votes: {}, revealedSheriffs: [] };
-    return res.status(200).json(state);
+    if (!roomCode) {
+      return res.status(400).json({ error: "Missing roomCode parameter." });
+    }
+
+    const normRoom = roomCode.toUpperCase().trim();
+
+    // 1. Fetch live votes from the Redis Hash Map
+    const votes = await redis.hgetall(`votes:${normRoom}`) || {};
+
+    // 2. Fetch revealed sheriffs from the Redis Set
+    const revealedSheriffs = await redis.smembers(`sheriffs:${normRoom}`) || [];
+
+    // 3. Return the exact object structure the host UI expects
+    return res.status(200).json({
+      votes,
+      revealedSheriffs
+    });
+    
   } catch (error) {
+    console.error("Error inside get-room-actions handler:", error);
     return res.status(500).json({ error: error.message });
   }
 }
