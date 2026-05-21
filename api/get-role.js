@@ -19,12 +19,21 @@ export default async function handler(req, res) {
     const player = data.players.find(p => p.class.toLowerCase() === playerName.toLowerCase().trim());
     if (!player) return res.status(404).json({ error: 'Player name not found in this game.' });
 
-    // Return only what the player is allowed to see
+    // Find their partner(s) if they are a lover
+    let loversData = [];
+    if (player.isLover) {
+        loversData = data.players
+            .filter(p => p.isLover && p.class !== player.class)
+            .map(p => ({ name: p.class, role: p.role }));
+    }
+
+    // Return the data to the player's phone
     return res.status(200).json({ 
         isStarted: data.isStarted,
         role: player.role, 
         isAlive: player.isAlive,
         isLover: player.isLover,
+        lovers: loversData, // THIS IS THE CRUCIAL PART THAT WAS ADDED
         isTurned: player.isTurned
     });
   } catch (error) {
