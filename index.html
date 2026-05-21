@@ -564,7 +564,28 @@
                 if (isLover) newData[activeRound].players.forEach(p => { if (p.isLover && p !== player) { p.isAlive = nextAlive; p.isRecentlyDead = nextRecent; } });
                 setRoundsData(newData);
             };
-
+const unlockPlayer = async (playerName) => {
+            try {
+                const response = await fetch('/api/player-action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        roomCode: currentRound.roomCode,
+                        action: 'UNLOCK_PLAYER',
+                        target: playerName
+                    })
+                });
+                
+                if (response.ok) {
+                    alert(`${playerName} has been unlocked! Tell them to refresh and reconnect.`);
+                } else {
+                    const data = await response.json();
+                    alert(`Error unlocking: ${data.error}`);
+                }
+            } catch (err) {
+                alert("Failed to connect to the server.");
+            }
+        };
             const toggleLover = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isLover = !newData[activeRound].players[index].isLover; setRoundsData(newData); };
             const toggleTurned = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isTurned = !newData[activeRound].players[index].isTurned; setRoundsData(newData); };
 
