@@ -35,6 +35,7 @@
         const Plus = (p) => <Icon {...p} path={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />;
         const Trash2 = (p) => <Icon {...p} path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>} />;
         const LogOut = (p) => <Icon {...p} path={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />;
+        const Smartphone = (p) => <Icon {...p} path={<><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></>} />;
 
         const INITIAL_ROLES = ["Werewolf", "Serial Killer", "Seer", "Doctor", "Witch", "Hunter", "Fool", "Werewolf", "Doctor", "Prince", "Red Lady", "Cupid", "Cursed One", "Shepherd", "Werewolf (Hunter)", "Seer", "Sheriff", "Werewolf (cub)", "Knight", "Villager"];
         const AVAILABLE_ROLES_LIST = ["Werewolf", "Werewolf (Hunter)", "Werewolf (cub)", "Villager", "Seer", "Doctor", "Cupid", "Witch", "Hunter", "Red Lady", "Serial Killer", "Fool", "Prince", "Cursed One", "Shepherd", "Knight", "Sheriff"];
@@ -53,21 +54,26 @@
             return initial;
         };
 
+        const generateRoomCode = () => Math.random().toString(36).substring(2, 6).toUpperCase();
+
         const App = () => {
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            // App Mode: 'landing', 'host', or 'player'
+            const [appMode, setAppMode] = useState('landing');
             const [isLoading, setIsLoading] = useState(true);
-            const [userEmail, setUserEmail] = useState("");
             const [loginError, setLoginError] = useState("");
 
+            // Host State
+            const [userEmail, setUserEmail] = useState("");
+            const [roomCode, setRoomCode] = useState(generateRoomCode()); // Unique code for players to join
             const [activeRound, setActiveRound] = useState(1);
             const [showRoles, setShowRoles] = useState(false);
             const [completedNightCalls, setCompletedNightCalls] = useState([]);
-            
             const [rosters, setRosters] = useState(getInitialRosters());
             const [roleDeck, setRoleDeck] = useState(getInitialDeck());
             const [useDefaultRoles, setUseDefaultRoles] = useState(true);
             const [roundsData, setRoundsData] = useState(getInitialRounds());
-
+            
+            // Host Settings State
             const [isManageModalOpen, setIsManageModalOpen] = useState(false);
             const [activeSettingsTab, setActiveSettingsTab] = useState('groups');
             const [isEditingRoster, setIsEditingRoster] = useState(false);
@@ -75,7 +81,13 @@
             const [rosterDraftName, setRosterDraftName] = useState("");
             const [rosterDraftPlayers, setRosterDraftPlayers] = useState("");
 
-            // 1. Check if a session already exists on page load
+            // Player State
+            const [playerRoomInput, setPlayerRoomInput] = useState("");
+            const [playerNameInput, setPlayerNameInput] = useState("");
+            const [playerData, setPlayerData] = useState(null);
+            const [playerError, setPlayerError] = useState("");
+
+            // 1. Initial Session Check
             useEffect(() => {
                 const checkSession = async () => {
                     try {
@@ -89,7 +101,7 @@
                                 setRoleDeck(profile.roleDeck || getInitialDeck());
                                 setUseDefaultRoles(profile.useDefaultRoles !== undefined ? profile.useDefaultRoles : true);
                                 if (profile.email) setUserEmail(profile.email);
-                                setIsLoggedIn(true);
+                                setAppMode('host');
                             }
                         }
                     } catch (e) {
@@ -101,11 +113,11 @@
                 checkSession();
             }, []);
 
-            // 2. Render Google Button if not logged in
+            // 2. Render Google Button for Hosts
             useEffect(() => {
-                if (!isLoading && !isLoggedIn && window.google) {
+                if (!isLoading && appMode === 'landing' && window.google) {
                     window.google.accounts.id.initialize({
-                        client_id: "536909690413-i1jho0bc3dspomfubh821gr80qns8laj.apps.googleusercontent.com",  // <--- ADD YOUR CLIENT ID HERE
+                        client_id: "PASTE_YOUR_GOOGLE_CLIENT_ID_HERE",  // <--- ADD YOUR CLIENT ID HERE
                         callback: handleGoogleResponse
                     });
                     window.google.accounts.id.renderButton(
@@ -113,14 +125,13 @@
                         { theme: "outline", size: "large", width: 250 }
                     );
                 }
-            }, [isLoading, isLoggedIn]);
+            }, [isLoading, appMode]);
 
-            // 3. Handle the Google Popup Response
+            // 3. Handle Host Login
             const handleGoogleResponse = async (response) => {
                 setIsLoading(true);
                 setLoginError("");
                 try {
-                    // Send Google's token to our Vercel Backend
                     const loginRes = await fetch('/api/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -131,7 +142,6 @@
                         const { email } = await loginRes.json();
                         setUserEmail(email);
 
-                        // Fetch their Upstash data using the new secure cookie
                         const dataRes = await fetch('/api/get-data');
                         if (dataRes.ok) {
                             const r = await dataRes.json();
@@ -143,7 +153,7 @@
                                 setUseDefaultRoles(profile.useDefaultRoles !== undefined ? profile.useDefaultRoles : true);
                             }
                         }
-                        setIsLoggedIn(true);
+                        setAppMode('host');
                     } else {
                         setLoginError("Login verified failed.");
                     }
@@ -155,57 +165,179 @@
 
             const handleLogout = async () => {
                 await fetch('/api/logout', { method: 'POST' });
-                setIsLoggedIn(false);
+                setAppMode('landing');
                 setUserEmail("");
                 setRosters(getInitialRosters()); setRoundsData(getInitialRounds());
                 setRoleDeck(getInitialDeck()); setUseDefaultRoles(true); setActiveRound(1);
             };
 
-            // 4. Save to DB automatically whenever data changes
+            // 4. Host Auto-Save & Broadcast Effect
             useEffect(() => {
-                if (!isLoggedIn) return;
+                if (appMode !== 'host') return;
 
+                // Save to Database Backup
                 const profileData = { email: userEmail, rosters, roundsData, roleDeck, useDefaultRoles };
-                localStorage.setItem('werewolf_backup', JSON.stringify(profileData)); // Optional Local Backup
-
-                const timer = setTimeout(async () => {
+                const dbTimer = setTimeout(async () => {
                     try {
-                        await fetch('/api/save-data', { 
-                            method: 'POST', 
-                            headers: { 'Content-Type': 'application/json' }, 
-                            body: JSON.stringify({ data: profileData }) 
-                        }).catch(()=>null);
+                        await fetch('/api/save-data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: profileData }) }).catch(()=>null);
                     } catch(e) {}
                 }, 1500);
 
-                return () => clearTimeout(timer);
-            }, [rosters, roundsData, roleDeck, useDefaultRoles, isLoggedIn, userEmail]);
+                // Broadcast current round to Room Code for Players to see
+                const broadcastTimer = setTimeout(async () => {
+                    try {
+                        await fetch('/api/host-room', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ roomCode, roundData: roundsData[activeRound] })
+                        });
+                    } catch(e) {}
+                }, 500); // Faster update for player phones
 
-            if (!isLoggedIn) {
+                return () => { clearTimeout(dbTimer); clearTimeout(broadcastTimer); };
+            }, [rosters, roundsData, activeRound, roleDeck, useDefaultRoles, appMode, userEmail, roomCode]);
+
+
+            // 5. Player Polling Effect
+            useEffect(() => {
+                let pollInterval;
+                if (appMode === 'player') {
+                    const fetchRole = async () => {
+                        try {
+                            const res = await fetch(`/api/get-role?roomCode=${playerRoomInput}&playerName=${playerNameInput}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                setPlayerData(data);
+                                setPlayerError("");
+                            } else {
+                                const errorData = await res.json();
+                                setPlayerError(errorData.error || "Connection lost.");
+                            }
+                        } catch (e) {
+                            setPlayerError("Lost connection to Host.");
+                        }
+                    };
+
+                    fetchRole(); // Fetch immediately
+                    pollInterval = setInterval(fetchRole, 3000); // Then every 3 seconds
+                }
+                return () => clearInterval(pollInterval);
+            }, [appMode, playerRoomInput, playerNameInput]);
+
+
+            // --- UI Renders ---
+
+            // LANDING SCREEN (Split Host / Join)
+            if (appMode === 'landing') {
                 return (
                     <div className="min-h-screen flex items-center justify-center p-4">
-                        <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 max-w-md w-full">
-                            <div className="text-center mb-8">
-                                <h1 className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase italic mb-2">Werewolf Hub</h1>
-                                <p className="text-slate-400">Tournament Manager</p>
-                            </div>
+                        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
                             
-                            {isLoading ? (
-                                <div className="text-center text-slate-400 font-bold py-8">Checking Session...</div>
-                            ) : (
-                                <div className="flex flex-col items-center gap-4 py-4">
-                                    <div id="google-signin-button"></div>
-                                    {loginError && <div className="text-red-400 text-sm font-bold text-center bg-red-900/20 p-2 rounded-lg border border-red-900/50 w-full">{loginError}</div>}
+                            {/* Player Join Card */}
+                            <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 flex flex-col justify-between">
+                                <div>
+                                    <h2 className="text-2xl font-black mb-2 flex items-center gap-2"><Smartphone className="text-blue-400"/> Join Game</h2>
+                                    <p className="text-slate-400 text-sm mb-6">Enter the code on the host's screen to view your secret role.</p>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Room Code</label>
+                                            <input type="text" maxLength="4" className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white text-xl font-bold uppercase text-center outline-none focus:border-blue-500" placeholder="ABCD" value={playerRoomInput} onChange={(e) => setPlayerRoomInput(e.target.value.toUpperCase())} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Your Name / Class</label>
+                                            <input type="text" className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white outline-none focus:border-blue-500" placeholder="e.g. 1A" value={playerNameInput} onChange={(e) => setPlayerNameInput(e.target.value)} />
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
+                                <button 
+                                    onClick={() => { if(playerRoomInput && playerNameInput) setAppMode('player'); }}
+                                    className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all"
+                                >
+                                    Connect Device
+                                </button>
+                            </div>
+
+                            {/* Host Login Card */}
+                            <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 flex flex-col justify-center items-center text-center">
+                                <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase italic mb-2">Werewolf Hub</h1>
+                                <p className="text-slate-400 mb-8">Host a Tournament</p>
+                                
+                                {isLoading ? (
+                                    <div className="text-center text-slate-400 font-bold py-8">Checking Session...</div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div id="google-signin-button"></div>
+                                        {loginError && <div className="text-red-400 text-sm font-bold text-center bg-red-900/20 p-2 rounded-lg border border-red-900/50 w-full">{loginError}</div>}
+                                    </div>
+                                )}
+                            </div>
+
                         </div>
                     </div>
                 );
             }
 
+            // PLAYER VIEW SCREEN
+            if (appMode === 'player') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-950 relative">
+                        <button onClick={() => { setAppMode('landing'); setPlayerData(null); }} className="absolute top-6 left-6 text-slate-500 hover:text-white font-bold text-sm">← Leave Room</button>
+                        
+                        <div className="text-center w-full max-w-sm">
+                            {playerError ? (
+                                <div className="bg-red-900/20 border border-red-900 p-6 rounded-2xl">
+                                    <h3 className="text-red-500 font-bold mb-2">Wait a second...</h3>
+                                    <p className="text-slate-300">{playerError}</p>
+                                    <p className="text-xs text-slate-500 mt-4">Make sure you spelled your name exactly as it appears on the Host's screen.</p>
+                                </div>
+                            ) : !playerData ? (
+                                <div className="animate-pulse text-slate-400 font-bold text-xl">Connecting to Host...</div>
+                            ) : !playerData.isStarted ? (
+                                <div className="bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
+                                    <Moon className="mx-auto text-indigo-400 mb-4" size={48} />
+                                    <h2 className="text-2xl font-bold text-white mb-2">Connected!</h2>
+                                    <p className="text-slate-400">Look at the main screen. Waiting for the host to deal the cards...</p>
+                                </div>
+                            ) : !playerData.isAlive ? (
+                                <div className="bg-red-950/50 p-8 rounded-3xl border border-red-900 shadow-[0_0_50px_rgba(220,38,38,0.1)]">
+                                    <Skull className="mx-auto text-red-500 mb-4" size={64} />
+                                    <h2 className="text-4xl font-black text-red-500 uppercase tracking-widest mb-2">You Died</h2>
+                                    <p className="text-red-300/70">Please remain silent for the rest of the game.</p>
+                                    <div className="mt-6 pt-6 border-t border-red-900/50">
+                                        <p className="text-sm text-red-400/50 uppercase font-bold tracking-widest">Your Role Was</p>
+                                        <p className="text-xl font-bold text-red-400">{playerData.role}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-slate-800 p-8 rounded-3xl border border-slate-600 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative overflow-hidden">
+                                    <div className="text-sm text-slate-400 uppercase font-bold tracking-widest mb-1">Your Secret Role</div>
+                                    <h2 className="text-4xl font-black text-white mb-6 bg-gradient-to-br from-white to-slate-400 text-transparent bg-clip-text">{playerData.role}</h2>
+                                    
+                                    {playerData.isLover && (
+                                        <div className="bg-pink-950/30 border border-pink-900/50 rounded-xl p-3 mb-4 flex items-center justify-center gap-2 text-pink-400 font-bold">
+                                            <Heart size={18} fill="currentColor" /> You are in love
+                                        </div>
+                                    )}
+                                    {playerData.isTurned && (
+                                        <div className="bg-red-950/30 border border-red-900/50 rounded-xl p-3 mb-4 flex items-center justify-center gap-2 text-red-400 font-bold">
+                                            <Moon size={18} fill="currentColor" /> You have been bitten! You are now a Werewolf.
+                                        </div>
+                                    )}
+
+                                    <div className="mt-8 pt-6 border-t border-slate-700">
+                                        <p className="text-sm text-slate-300 italic">"Keep this screen hidden from other players."</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )
+            }
+
+
+            // --- HOST VIEW SCREEN (Original Game Manager) ---
             const currentRound = roundsData[activeRound];
 
-            // --- Game Logic ---
             const applyRosterToRound = (rosterId) => {
                 const roster = rosters.find(r => r.id === rosterId);
                 if (!roster) return;
@@ -298,8 +430,19 @@
                 <header className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
                     <div>
                         <h1 className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase italic">Werewolf Hub</h1>
-                        <div className="flex items-center gap-2 text-slate-400 font-medium"><span>Host: <span className="text-white text-xs bg-slate-800 px-2 py-1 rounded-md">{userEmail}</span></span><button onClick={handleLogout} className="text-xs hover:text-red-400 ml-2" title="Logout"><LogOut size={14} /></button></div>
+                        <div className="flex items-center gap-2 text-slate-400 font-medium">
+                            <span className="text-white text-xs bg-slate-800 px-2 py-1 rounded-md">{userEmail}</span>
+                            <button onClick={handleLogout} className="text-xs hover:text-red-400 ml-2" title="Logout"><LogOut size={14} /></button>
+                        </div>
                     </div>
+
+                    {/* Room Code Banner */}
+                    <div className="bg-blue-900/50 border border-blue-500/50 px-6 py-2 rounded-xl flex items-center gap-4">
+                        <div className="text-xs text-blue-300 font-bold uppercase tracking-widest text-right leading-tight">Players<br/>Join At</div>
+                        <div className="text-2xl font-black tracking-widest text-white">{roomCode}</div>
+                        <button onClick={() => setRoomCode(generateRoomCode())} className="ml-2 text-blue-400 hover:text-white" title="Generate New Room Code"><RotateCcw size={16}/></button>
+                    </div>
+
                     <div className="flex bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-700">
                     {[1, 2, 3, 4].map(r => ( <button key={r} onClick={() => setActiveRound(r)} className={`px-6 py-2 rounded-lg font-bold transition-all ${activeRound === r ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400'}`}>Round {r}</button> ))}
                     </div>
