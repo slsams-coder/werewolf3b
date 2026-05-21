@@ -11,15 +11,15 @@ export default async function handler(req, res) {
   try {
     const { roomCode, playerName } = req.query;
     
-    // Fetch the room data
+    // Fetch Host data AND the new Client data (votes/sheriffs)
     const data = await redis.get(`room_${roomCode.toUpperCase()}`);
     if (!data) return res.status(404).json({ error: 'Room not found' });
 
-    // Find the specific player
+    const clientState = await redis.get(`room_${roomCode.toUpperCase()}_client_state`) || { votes: {}, revealedSheriffs: [] };
+
     const player = data.players.find(p => p.class.toLowerCase() === playerName.toLowerCase().trim());
     if (!player) return res.status(404).json({ error: 'Player name not found in this game.' });
 
-    // Find their partner(s) if they are a lover
     let loversData = [];
     if (player.isLover) {
         loversData = data.players
@@ -27,14 +27,20 @@ export default async function handler(req, res) {
             .map(p => ({ name: p.class, role: p.role }));
     }
 
-    // Return the data to the player's phone
+    // Get a list of everyone who is still alive for the voting dropdown
+    const alivePlayers = data.players.filter(p => p.isAlive && !p.isAbsent).map(p => p.class);
+
     return res.status(200).json({ 
         isStarted: data.isStarted,
+        isVotingActive: data.isVotingActive || false, // Tells the phone to show the voting UI
         role: player.role, 
         isAlive: player.isAlive,
         isLover: player.isLover,
-        lovers: loversData, // THIS IS THE CRUCIAL PART THAT WAS ADDED
-        isTurned: player.isTurned
+        lovers: loversData,
+        isTurned: player.isTurned,
+        alivePlayers: alivePlayers, // Populates the dropdown menu
+        hasRevealedSheriff: clientState.revealedSheriffs?.includes(player.class), // Checks if they already clicked the reveal button
+        myVote: clientState.votes?.[player.class] || null // Checks who they voted for
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
