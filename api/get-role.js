@@ -9,43 +9,39 @@ export default async function handler(req, res) {
   try {
     const { roomCode, playerName } = req.query;
 
-    if (!roomCode) {
-      return res.status(400).json({ error: "Missing room code." });
-    }
+    if (!roomCode) return res.status(400).json({ error: "Missing room code." });
 
     const normRoom = roomCode.toUpperCase().trim();
 
-    // 1. Grab room data from Upstash
+    // 1. Grab base room configuration
     const roundData = await redis.get(`room:${normRoom}`);
-
     if (!roundData) {
       return res.status(404).json({ error: "Room not found. Waiting for Host to initialize..." });
     }
 
-    // 2. Fetch active votes/sheriff reveals from actions cache
-    const actionData = await redis.get(`actions:${normRoom}`) || { votes: {}, revealedSheriffs: [] };
+    // 2. Grab latest live action hashes
+    const [votes, sheriffsMap] = await Promise.all([
+      redis.hgetall(`votes:${normRoom}`),
+      redis.hgetall(`sheriffs:${normRoom}`)
+    ]);
 
-    // 3. MERGE ACTIVE VOTES INTO THE PLAYERS ARRAY FOR THE HOST SCREEN
+    const activeVotes = votes || {};
+    const revealedSheriffs = sheriffsMap ? Object.keys(sheriffsMap) : [];
+
+    // 3. Map votes dynamically to prevent data drops
     const mappedPlayers = roundData.players.map(p => {
       const playerKey = p.class.toLowerCase().trim();
-      // Look up if this specific player has cast a vote in our Upstash actions cache
-      const activeVoteKey = Object.keys(actionData.votes || {}).find(k => k.toLowerCase().trim() === playerKey);
-      
+      const activeVoteKey = Object.keys(activeVotes).find(k => k.toLowerCase().trim() === playerKey);
       return {
         ...p,
-        vote: activeVoteKey ? actionData.votes[activeVoteKey] : (p.vote || null) // Append vote string to player object
+        vote: activeVoteKey ? activeVotes[activeVoteKey] : (p.vote || null)
       };
     });
 
-    // 4. ROUTE HOST REQUESTS (Host calls without a playerName parameter)
     if (!playerName) {
-      return res.status(200).json({
-        ...roundData,
-        players: mappedPlayers // Return players with live vote metadata attached!
-      });
+      return res.status(200).json({ ...roundData, players: mappedPlayers });
     }
 
-    // 5. ROUTE PLAYER REQUESTS
     const targetName = playerName.toLowerCase().trim();
     const playerObj = mappedPlayers.find(p => p.class.toLowerCase().trim() === targetName);
 
@@ -53,7 +49,7 @@ export default async function handler(req, res) {
       return res.status(444).json({ error: "Your name is not registered in this active match." });
     }
 
-    const hasRevealedSheriff = (actionData.revealedSheriffs || []).some(s => s.toLowerCase().trim() === targetName);
+    const hasRevealedSheriff = revealedSheriffs.some(s => s.toLowerCase().trim() === targetName);
 
     return res.status(200).json({
       isStarted: roundData.isStarted,
@@ -69,7 +65,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("Error reading room:", error);
+    console.error("Error reading role:", error);
     return res.status(500).json({ error: "Internal server error." });
   }
 }
