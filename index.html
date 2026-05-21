@@ -525,7 +525,28 @@
                 else { setEditingRosterId(null); setRosterDraftName(""); setRosterDraftPlayers(""); }
                 setIsEditingRoster(true);
             };
-
+            const unlockPlayer = async (playerName) => {
+                try {
+                const response = await fetch('/api/player-action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        roomCode: currentRound.roomCode,
+                        action: 'UNLOCK_PLAYER',
+                        target: playerName
+                    })
+                });
+                
+                if (response.ok) {
+                    alert(`${playerName} has been unlocked! Tell them to refresh and reconnect.`);
+                } else {
+                    const data = await response.json();
+                    alert(`Error unlocking: ${data.error}`);
+                }
+            } catch (err) {
+                alert("Failed to connect to the server.");
+            }
+        };
             const toggleAbsence = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isAbsent = !newData[activeRound].players[index].isAbsent; setRoundsData(newData); };
 
             const assignRoles = async () => {
@@ -564,28 +585,7 @@
                 if (isLover) newData[activeRound].players.forEach(p => { if (p.isLover && p !== player) { p.isAlive = nextAlive; p.isRecentlyDead = nextRecent; } });
                 setRoundsData(newData);
             };
-const unlockPlayer = async (playerName) => {
-            try {
-                const response = await fetch('/api/player-action', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        roomCode: currentRound.roomCode,
-                        action: 'UNLOCK_PLAYER',
-                        target: playerName
-                    })
-                });
-                
-                if (response.ok) {
-                    alert(`${playerName} has been unlocked! Tell them to refresh and reconnect.`);
-                } else {
-                    const data = await response.json();
-                    alert(`Error unlocking: ${data.error}`);
-                }
-            } catch (err) {
-                alert("Failed to connect to the server.");
-            }
-        };
+
             const toggleLover = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isLover = !newData[activeRound].players[index].isLover; setRoundsData(newData); };
             const toggleTurned = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isTurned = !newData[activeRound].players[index].isTurned; setRoundsData(newData); };
 
@@ -673,7 +673,17 @@ const unlockPlayer = async (playerName) => {
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {currentRound.players.map((player, idx) => (
                             <div key={player.class} onClick={() => !currentRound.isStarted ? toggleAbsence(idx) : !player.isAbsent && toggleAlive(idx)} className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer select-none ${player.isAbsent ? 'bg-slate-900 border-slate-800 opacity-40' : currentRound.isStarted && !player.isAlive ? (player.isRecentlyDead ? 'bg-red-900/40 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-red-900/30 border-red-900/50 opacity-60') : 'bg-slate-700 border-slate-600 hover:border-orange-400'}`}>
-                            
+                            {currentRound.isStarted && (
+                                                <button 
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        unlockPlayer(player.class); 
+                                                    }} 
+                                                    className="mb-2 text-[10px] bg-slate-800 hover:bg-slate-600 border border-slate-500 text-slate-300 py-1 px-2 rounded font-bold transition-colors z-10 uppercase"
+                                                >
+                                                    Unlock
+                                                </button>
+                                            )}
                             {isRevealedSheriff(player.class) && (
                                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)] z-20" title="Revealed Sheriff">
                                     <Star fill="currentColor" size={28} />
@@ -696,6 +706,12 @@ const unlockPlayer = async (playerName) => {
                                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-blue-600 border border-blue-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap z-20">
                                     Voted: {getPlayerVote(player.class)}
                                 </div>
+
+                                {clientState.firstVoters && clientState.firstVoters[player.class] && player.role === 'Prince' && (
+                                            <div className="mt-1 text-xs font-bold text-red-400 bg-red-950/50 rounded p-1 border border-red-900/50">
+                                                Lynched: {clientState.firstVoters[player.class]}
+                                            </div>
+                                        )}
                             )}
                             
                             {currentRound.isVotingActive && voteTally[player.class] > 0 && (
