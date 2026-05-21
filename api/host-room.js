@@ -11,9 +11,10 @@ export default async function handler(req, res) {
   try {
     const { roomCode, roundData } = req.body;
     
-    // Save the round data to a specific room key.
-    // We set 'ex: 86400' so the room automatically deletes itself after 24 hours.
-    await redis.set(`room_${roomCode.toUpperCase()}`, JSON.stringify(roundData), { ex: 86400 });
+    // FIX: Changed 'room_' to 'room:' to match get-role.js
+    // Also, Upstash Redis automatically handles JSON serialization, 
+    // so sending roundData directly is safer if get-role.js expects an object.
+    await redis.set(`room:${roomCode.toUpperCase()}`, roundData, { ex: 86400 });
     
     return res.status(200).json({ success: true });
   } catch (error) {
