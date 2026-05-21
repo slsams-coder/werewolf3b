@@ -81,6 +81,17 @@
             const [isLoading, setIsLoading] = useState(true);
             const [loginError, setLoginError] = useState("");
 
+            // --- DIBS SYSTEM: GENERATE A UNIQUE DEVICE ID ---
+            const [deviceId] = useState(() => {
+                let id = localStorage.getItem('ww_device_id');
+                if (!id) {
+                    id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                    localStorage.setItem('ww_device_id', id);
+                }
+                return id;
+            });
+            // ------------------------------------------------
+
             const [userEmail, setUserEmail] = useState("");
             const [roomCode, setRoomCode] = useState(generateRoomCode()); 
             const [activeRound, setActiveRound] = useState(1);
@@ -212,13 +223,13 @@
                 return () => clearInterval(interval);
             }, [appMode, roomCode]);
 
-            // Player Phone Polling
+            // Player Phone Polling - SENDS DEVICE ID
             useEffect(() => {
                 let pollInterval;
                 if (appMode === 'player') {
                     const fetchRole = async () => {
                         try {
-                            const res = await fetch(`/api/get-role?roomCode=${encodeURIComponent(playerRoomInput.trim())}&playerName=${encodeURIComponent(playerNameInput.trim())}&t=${Date.now()}`);
+                            const res = await fetch(`/api/get-role?roomCode=${encodeURIComponent(playerRoomInput.trim())}&playerName=${encodeURIComponent(playerNameInput.trim())}&deviceId=${encodeURIComponent(deviceId)}&t=${Date.now()}`);
                             if (res.ok) {
                                 const data = await res.json();
                                 setPlayerData(data);
@@ -226,6 +237,8 @@
                             } else {
                                 const errorData = await res.json();
                                 setPlayerError(errorData.error || "Connection lost.");
+                                // If device is rejected, boot them back to landing screen
+                                if(res.status === 403) setAppMode('landing'); 
                             }
                         } catch (e) {
                             setPlayerError("Lost connection to Host.");
@@ -235,7 +248,7 @@
                     pollInterval = setInterval(fetchRole, 3000); 
                 }
                 return () => clearInterval(pollInterval);
-            }, [appMode, playerRoomInput, playerNameInput]);
+            }, [appMode, playerRoomInput, playerNameInput, deviceId]);
 
 
             // --- LANDING SCREEN ---
@@ -248,6 +261,9 @@
                                 <div>
                                     <h2 className="text-2xl font-black mb-2 flex items-center gap-2"><Smartphone className="text-blue-400"/> Join Game</h2>
                                     <p className="text-slate-400 text-sm mb-6">Enter the code on the host's screen to view your secret role.</p>
+                                    
+                                    {playerError && <div className="mb-4 bg-red-900/30 border border-red-900 p-3 rounded-lg text-red-400 font-bold text-sm text-center">{playerError}</div>}
+
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Room Code</label>
@@ -266,6 +282,7 @@
                                         if(cleanRoom && cleanName) {
                                             setPlayerRoomInput(cleanRoom);
                                             setPlayerNameInput(cleanName);
+                                            setPlayerError("");
                                             setAppMode('player'); 
                                         }
                                     }}
@@ -302,7 +319,6 @@
                     return ROLE_DESCRIPTIONS[role] || "";
                 };
 
-                // CRITICAL FIX: Match the typed player name with the host's actual roster casing rules
                 const resolvedPlayerName = (playerData && playerData.alivePlayers)
                     ? (playerData.alivePlayers.find(p => p.toLowerCase() === playerNameInput.toLowerCase().trim()) || playerNameInput.trim())
                     : playerNameInput.trim();
@@ -348,7 +364,7 @@
                                         </p>
                                     </div>
 
-                                    {/* SHERIFF REVEAL BUTTON */}
+                                    {/* SHERIFF REVEAL BUTTON - SENDS DEVICE ID */}
                                     {playerData.role === 'Sheriff' && !playerData.hasRevealedSheriff && (
                                         <button 
                                             onClick={() => {
@@ -356,7 +372,7 @@
                                                     fetch('/api/player-action', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: resolvedPlayerName, action: 'REVEAL_SHERIFF' })
+                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: resolvedPlayerName, action: 'REVEAL_SHERIFF', deviceId })
                                                     });
                                                     setPlayerData(prev => ({...prev, hasRevealedSheriff: true}));
                                                 }
@@ -367,7 +383,6 @@
                                         </button>
                                     )}
 
-                                    {/* SHERIFF REVEALED STATUS */}
                                     {playerData.hasRevealedSheriff && (
                                         <div className="mb-6 bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-yellow-500 font-bold uppercase tracking-widest shadow-inner">
                                             <div className="flex items-center gap-2"><Star fill="currentColor" size={18} /> Sheriff Revealed</div>
@@ -393,7 +408,7 @@
                                         </div>
                                     )}
 
-                                    {/* LIVE VOTING UI */}
+                                    {/* LIVE VOTING UI - SENDS DEVICE ID */}
                                     {playerData.isVotingActive && (
                                         <div className="bg-blue-950/50 border border-blue-800/50 rounded-xl p-5 mt-6 shadow-inner text-left">
                                             <h3 className="font-bold text-blue-400 mb-3 text-center uppercase tracking-widest text-sm">Vote to Lynch</h3>
@@ -404,7 +419,7 @@
                                                     fetch('/api/player-action', {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: resolvedPlayerName, action: 'VOTE', target })
+                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: resolvedPlayerName, action: 'VOTE', target, deviceId })
                                                     });
                                                     setPlayerData(prev => ({...prev, myVote: target}));
                                                 }}
@@ -433,7 +448,6 @@
             // --- HOST SCREEN ---
             const currentRound = roundsData[activeRound];
 
-            // CRITICAL FIX: Make vote lookups case-insensitive
             const getPlayerVote = (playerClass) => {
                 const voteKey = Object.keys(clientState.votes || {}).find(k => k.toLowerCase() === playerClass.toLowerCase().trim());
                 if (!voteKey) return null;
@@ -446,7 +460,6 @@
                 return (clientState.revealedSheriffs || []).some(s => s.toLowerCase() === playerClass.toLowerCase().trim());
             };
 
-            // CRITICAL FIX: Make vote counting completely casing-robust
             const getVoteTally = () => {
                 const tally = {};
                 Object.entries(clientState.votes || {}).forEach(([voter, target]) => {
@@ -555,6 +568,7 @@
             const toggleLover = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isLover = !newData[activeRound].players[index].isLover; setRoundsData(newData); };
             const toggleTurned = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isTurned = !newData[activeRound].players[index].isTurned; setRoundsData(newData); };
 
+            // Host Reset - Clears Locks via Backend Call
             const resetRound = async () => {
                 if(!window.confirm(`Reset Round ${activeRound}? All game progress for this round will be lost.`)) return;
                 const roster = rosters.find(r => r.id === currentRound.rosterId) || rosters[0];
@@ -620,7 +634,6 @@
                                 )}
                                 {currentRound.isStarted && <div className="px-4 py-1.5 bg-slate-900/50 rounded-xl text-sm font-bold border border-slate-700/50">Alive: <span className="text-green-400">{currentRound.players.filter(p => p.isAlive && !p.isAbsent && p.role).length}</span> / {currentRound.players.filter(p => !p.isAbsent && p.role).length}</div>}
                                 
-                                {/* START VOTE BUTTON */}
                                 {currentRound.isStarted && (
                                     <button 
                                         onClick={toggleVoting} 
@@ -640,7 +653,6 @@
                         {currentRound.players.map((player, idx) => (
                             <div key={player.class} onClick={() => !currentRound.isStarted ? toggleAbsence(idx) : !player.isAbsent && toggleAlive(idx)} className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer select-none ${player.isAbsent ? 'bg-slate-900 border-slate-800 opacity-40' : currentRound.isStarted && !player.isAlive ? (player.isRecentlyDead ? 'bg-red-900/40 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-red-900/30 border-red-900/50 opacity-60') : 'bg-slate-700 border-slate-600 hover:border-orange-400'}`}>
                             
-                            {/* SHERIFF BADGE ICON */}
                             {isRevealedSheriff(player.class) && (
                                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)] z-20" title="Revealed Sheriff">
                                     <Star fill="currentColor" size={28} />
@@ -659,14 +671,12 @@
                                 </div>
                             )}
 
-                            {/* VOTING DATA DISPLAY */}
                             {currentRound.isVotingActive && getPlayerVote(player.class) && player.isAlive && (
                                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-blue-600 border border-blue-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap z-20">
                                     Voted: {getPlayerVote(player.class)}
                                 </div>
                             )}
                             
-                            {/* GIANT VOTE TALLY OVERLAY */}
                             {currentRound.isVotingActive && voteTally[player.class] > 0 && (
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-600/95 border-2 border-red-400 text-white text-4xl font-black w-16 h-16 flex items-center justify-center rounded-full shadow-[0_0_20px_rgba(220,38,38,0.8)] z-30 pointer-events-none">
                                     {voteTally[player.class]}
