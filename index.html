@@ -36,41 +36,39 @@
         const Trash2 = (p) => <Icon {...p} path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>} />;
         const LogOut = (p) => <Icon {...p} path={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />;
         const Smartphone = (p) => <Icon {...p} path={<><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></>} />;
-        const Star = (p) => <Icon {...p} path={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>} />;
+        const Shuffle = (p) => <Icon {...p} path={<><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></>} />;
+        const Shield = (p) => <Icon {...p} path={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>} />;
 
-        const INITIAL_ROLES = ["Werewolf", "Serial Killer", "Seer", "Doctor", "Witch", "Hunter", "Fool", "Werewolf", "Doctor", "Prince", "Red Lady", "Cupid", "Cursed One", "Shepherd", "Werewolf (Hunter)", "Seer", "Sheriff", "Werewolf (cub)", "Knight", "Villager"];
-        const AVAILABLE_ROLES_LIST = ["Werewolf", "Werewolf (Hunter)", "Werewolf (cub)", "Villager", "Seer", "Doctor", "Cupid", "Witch", "Hunter", "Red Lady", "Serial Killer", "Fool", "Prince", "Cursed One", "Shepherd", "Knight", "Sheriff"];
-        const DEFAULT_CLASSES = ["1A", "1B", "1C", "1D", "2A", "2B", "2C", "2D", "3A", "3B", "3C", "3D", "4A", "4B", "4C", "4D", "5A", "5B", "5C", "5D"];
+        const ALL_CLASSES = ["1A", "1B", "1C", "1D", "2A", "2B", "2C", "2D", "3A", "3B", "3C", "3D", "4A", "4B", "4C", "4D", "5A", "5B", "5C", "5D"];
         const NIGHT_ORDER = ["Cupid", "Serial Killer", "Werewolves", "Doctor", "Seer", "Witch", "Red Lady"];
-        
         const ROLE_DESCRIPTIONS = {
             "Werewolf": "Win if Serial killer is dead and the no. of villagers alive = no. of werewolves alive. The Serial Killer does not die when attacked.",
             "Seer": "Check a role to see if the player is good or evil.",
             "Doctor": "Save someone from the Werewolves or the Serial Killer.",
-            "Serial Killer": "Kill everyone to win. Werewolves can’t kill you at night.",
-            "Fool": "Win if you get voted out during the day.",
-            "Cupid": "Select two lovers. Win with villagers or with lovers.",
-            "Witch": "You're a villager. You can poison someone once.",
-            "Red Lady": "Choose a player to visit. You die if you visit the werewolves, the Serial Killer or an attacked player. You survive attacks if you're visiting someone else.",
-            "Hunter": "Shoot one player with your shotgun when you die.",
-            "Prince": "As a member of the royal family, you won’t die if people vote for you. The one who names you first dies instead.",
-            "Shepherd": "You have 2 lives. You die the second time.",
-            "Sheriff": "You can reveal your role anytime. Once you reveal, you will have two votes every day.",
-            "Cursed One": "You are a villager. If attacked by werewolves, you become a werewolf.",
-            "Knight": "When attacked by a werewolf, you take down the first wolf to your left as well.",
-            "Villager": "An innocent villager with no powers."
+            "Serial Killer": "Kill everyone to win. Immune to Night attacks.",
+            "Witch": "Has one kill potion and one save potion.",
+            "Prince": "When lynched, reveal role and survive (First time only).",
+            "Villager": "No special powers, find the killers.",
+            "Cupid": "Pick 2 players to be Lovers on Night 1. If one dies, the other dies.",
+            "Red Lady": "Visit someone at night. If they are Werewolf or targeted to die, you die. If you are targeted, you survive if visiting someone safe."
         };
 
-        const getNightInstruction = (role) => {
-            const map = { "Cupid": "select lovers", "Serial Killer": "attack someone", "Werewolves": "attack someone", "Doctor": "save someone", "Seer": "check someone", "Witch": "choose whether to poison/heal", "Red Lady": "visit someone" };
-            return map[role] || "perform their action";
-        };
+        const getInitialRosters = () => [
+            { id: 'r1', name: 'Standard Pool', players: ["1A", "1B", "1C", "1D", "2A", "2B", "2C", "2D", "3A", "3B", "3C", "3D"] }
+        ];
 
-        const getInitialRosters = () => [{ id: 'default', name: 'Original Classes (1A-5D)', players: DEFAULT_CLASSES }];
-        const getInitialDeck = () => ({ "Werewolf": 3, "Seer": 1, "Doctor": 1, "Witch": 1, "Cupid": 1, "Villager": 13 });
+        const getInitialDeck = () => ({
+            "Werewolf": 3, "Seer": 1, "Doctor": 1, "Witch": 1, "Serial Killer": 1, "Prince": 1, "Villager": 2, "Cupid": 1, "Red Lady": 1
+        });
+
         const getInitialRounds = () => {
             const initial = {};
-            [1, 2, 3, 4].forEach(r => { initial[r] = { rosterId: 'default', players: DEFAULT_CLASSES.map(c => ({ class: c, role: null, isAbsent: false, isAlive: true, isRecentlyDead: false, isLover: false, isTurned: false })), isStarted: false, nightNumber: 1, witchUsedPotion: false, isVotingActive: false }; });
+            [1, 2, 3, 4, 5].forEach(num => {
+                initial[`round_${num}`] = {
+                    id: `round_${num}`, name: `Round ${num}`, rosterId: 'r1', roomCode: "", isStarted: false, 
+                    players: [], nightNumber: 1, witchUsedPotion: false, isVotingActive: false
+                };
+            });
             return initial;
         };
 
@@ -81,7 +79,6 @@
             const [isLoading, setIsLoading] = useState(true);
             const [loginError, setLoginError] = useState("");
 
-            // --- DIBS SYSTEM: GENERATE A UNIQUE DEVICE ID ---
             const [deviceId] = useState(() => {
                 let id = localStorage.getItem('ww_device_id');
                 if (!id) {
@@ -90,89 +87,117 @@
                 }
                 return id;
             });
-            // ------------------------------------------------
 
-            const [userEmail, setUserEmail] = useState("");
-            const [roomCode, setRoomCode] = useState(generateRoomCode()); 
-            const [activeRound, setActiveRound] = useState(1);
-            const [showRoles, setShowRoles] = useState(false);
-            const [completedNightCalls, setCompletedNightCalls] = useState([]);
-            const [rosters, setRosters] = useState(getInitialRosters());
-            const [roleDeck, setRoleDeck] = useState(getInitialDeck());
+            const [rosters, setRosters] = useState(getInitialRosters);
+            const [roundsData, setRoundsData] = useState(getInitialRounds);
+            const [roleDeck, setRoleDeck] = useState(getInitialDeck);
             const [useDefaultRoles, setUseDefaultRoles] = useState(true);
-            const [roundsData, setRoundsData] = useState(getInitialRounds());
-            
-            const [isManageModalOpen, setIsManageModalOpen] = useState(false);
-            const [activeSettingsTab, setActiveSettingsTab] = useState('groups');
+
+            const [activeRound, setActiveRound] = useState('round_1');
             const [isEditingRoster, setIsEditingRoster] = useState(false);
             const [editingRosterId, setEditingRosterId] = useState(null);
             const [rosterDraftName, setRosterDraftName] = useState("");
             const [rosterDraftPlayers, setRosterDraftPlayers] = useState("");
-
-            const [clientState, setClientState] = useState({ votes: {}, revealedSheriffs: [] });
+            const [showRoles, setShowRoles] = useState(false);
+            const [activeSettingsTab, setActiveSettingsTab] = useState('groups');
 
             const [playerRoomInput, setPlayerRoomInput] = useState("");
-            const [playerNameInput, setPlayerNameInput] = useState("");
-            const [playerData, setPlayerData] = useState(null);
+            const [playerClassInput, setPlayerClassInput] = useState("");
+            const [resolvedPlayerName, setResolvedPlayerName] = useState("");
             const [playerError, setPlayerError] = useState("");
+            const [playerData, setPlayerData] = useState(null);
+
+            const [userEmail, setUserEmail] = useState("");
+            const [clientState, setClientState] = useState({ votes: {}, revealedSheriffs: [] });
 
             useEffect(() => {
-                const checkSession = async () => {
+                async function checkSession() {
                     try {
-                        const res = await fetch(`/api/get-data?t=${Date.now()}`);
-                        if (res.ok) {
-                            const r = await res.json();
-                            if (r.data) {
-                                const profile = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+                        const r = await fetch('/api/get-data');
+                        if (r.ok) {
+                            const resJson = await r.json();
+                            if (resJson.data) {
+                                const profile = JSON.parse(resJson.data);
                                 setRosters(profile.rosters || getInitialRosters());
                                 setRoundsData(profile.roundsData || getInitialRounds());
                                 setRoleDeck(profile.roleDeck || getInitialDeck());
                                 setUseDefaultRoles(profile.useDefaultRoles !== undefined ? profile.useDefaultRoles : true);
-                                if (profile.email) setUserEmail(profile.email);
-                                setAppMode('host');
                             }
+                            setAppMode('host');
                         }
-                    } catch (e) {
-                        console.warn("No active session found.");
-                    } finally {
-                        setIsLoading(false);
-                    }
-                };
+                    } catch (err) {}
+                    setIsLoading(false);
+                }
                 checkSession();
             }, []);
 
             useEffect(() => {
-                if (!isLoading && appMode === 'landing' && window.google) {
-                    window.google.accounts.id.initialize({
-                        client_id: "536909690413-i1jho0bc3dspomfubh821gr80qns8laj.apps.googleusercontent.com", 
-                        callback: handleGoogleResponse
-                    });
-                    window.google.accounts.id.renderButton(
-                        document.getElementById("google-signin-button"),
-                        { theme: "outline", size: "large", width: 250 }
-                    );
-                }
-            }, [isLoading, appMode]);
+                if (appMode !== 'host') return;
+                const timer = setInterval(async () => {
+                    try {
+                        const currentRound = roundsData[activeRound];
+                        if (!currentRound || !currentRound.roomCode) return;
+                        const response = await fetch(`/api/get-room-actions?roomCode=${currentRound.roomCode}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            setClientState(data);
+                        }
+                    } catch (err) {
+                        console.error("Failed sync live actions", err);
+                    }
+                }, 3000);
+                return () => clearInterval(timer);
+            }, [appMode, activeRound, roundsData]);
 
-            const handleGoogleResponse = async (response) => {
+            useEffect(() => {
+                if (appMode !== 'player' || !playerRoomInput || !resolvedPlayerName) return;
+                const timer = setInterval(async () => {
+                    try {
+                        const r = await fetch(`/api/get-role?roomCode=${playerRoomInput.trim()}&playerName=${resolvedPlayerName}&deviceId=${deviceId}`);
+                        if (r.ok) {
+                            const data = await r.json();
+                            setPlayerData(data);
+                        } else {
+                            const data = await r.json();
+                            setPlayerError(data.error || "Disconnected from server.");
+                            setPlayerData(null);
+                        }
+                    } catch (err) {}
+                }, 3000);
+                return () => clearInterval(timer);
+            }, [appMode, playerRoomInput, resolvedPlayerName, deviceId]);
+
+            const triggerProfileSave = async (updatedRosters, updatedRounds, updatedDeck, updatedDefault) => {
+                try {
+                    await fetch('/api/save-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            data: { rosters: updatedRosters, roundsData: updatedRounds, roleDeck: updatedDeck, useDefaultRoles: updatedDefault }
+                        })
+                    });
+                } catch (e) {
+                    console.error("Save state failed", e);
+                }
+            };
+
+            const handleGoogleLogin = async (response) => {
                 setIsLoading(true);
                 setLoginError("");
                 try {
-                    const loginRes = await fetch('/api/login', {
+                    const res = await fetch('/api/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ credential: response.credential })
                     });
-                    
-                    if (loginRes.ok) {
-                        const { email } = await loginRes.json();
-                        setUserEmail(email);
-
-                        const dataRes = await fetch(`/api/get-data?t=${Date.now()}`);
-                        if (dataRes.ok) {
-                            const r = await dataRes.json();
-                            if (r.data) {
-                                const profile = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;
+                    if (res.ok) {
+                        const data = await res.json();
+                        setUserEmail(data.email);
+                        const r = await fetch('/api/get-data');
+                        if (r.ok) {
+                            const resJson = await r.json();
+                            if (resJson.data) {
+                                const profile = JSON.parse(resJson.data);
                                 setRosters(profile.rosters || getInitialRosters());
                                 setRoundsData(profile.roundsData || getInitialRounds());
                                 setRoleDeck(profile.roleDeck || getInitialDeck());
@@ -193,227 +218,518 @@
                 await fetch('/api/logout', { method: 'POST' });
                 setAppMode('landing');
                 setUserEmail("");
-                setRosters(getInitialRosters()); setRoundsData(getInitialRounds());
-                setRoleDeck(getInitialDeck()); setUseDefaultRoles(true); setActiveRound(1);
+                setRosters(getInitialRosters());
+                setRoundsData(getInitialRounds());
+                setRoleDeck(getInitialDeck());
+                setUseDefaultRoles(true);
             };
 
-            // Host DB Push
-            useEffect(() => {
-                if (appMode !== 'host') return;
-                const profileData = { email: userEmail, rosters, roundsData, roleDeck, useDefaultRoles };
-                const dbTimer = setTimeout(async () => {
-                    try { await fetch('/api/save-data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: profileData }) }).catch(()=>null); } catch(e) {}
-                }, 1500);
-
-                const broadcastTimer = setTimeout(async () => {
-                    try { await fetch('/api/host-room', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ roomCode: roomCode.trim(), roundData: roundsData[activeRound] }) }); } catch(e) {}
-                }, 500); 
-                return () => { clearTimeout(dbTimer); clearTimeout(broadcastTimer); };
-            }, [rosters, roundsData, activeRound, roleDeck, useDefaultRoles, appMode, userEmail, roomCode]);
-
-            // Host Vote Polling
-            useEffect(() => {
-                if (appMode !== 'host') return;
-                const interval = setInterval(async () => {
-                    try {
-                        const res = await fetch(`/api/get-room-actions?roomCode=${encodeURIComponent(roomCode.trim())}&t=${Date.now()}`);
-                        if (res.ok) { const data = await res.json(); setClientState(data); }
-                    } catch(e) {}
-                }, 1500);
-                return () => clearInterval(interval);
-            }, [appMode, roomCode]);
-
-            // Player Phone Polling - SENDS DEVICE ID
-            useEffect(() => {
-                let pollInterval;
-                if (appMode === 'player') {
-                    const fetchRole = async () => {
-                        try {
-                            const res = await fetch(`/api/get-role?roomCode=${encodeURIComponent(playerRoomInput.trim())}&playerName=${encodeURIComponent(playerNameInput.trim())}&deviceId=${encodeURIComponent(deviceId)}&t=${Date.now()}`);
-                            if (res.ok) {
-                                const data = await res.json();
-                                setPlayerData(data);
-                                setPlayerError("");
-                            } else {
-                                const errorData = await res.json();
-                                setPlayerError(errorData.error || "Connection lost.");
-                                // If device is rejected, boot them back to landing screen
-                                if(res.status === 403) setAppMode('landing'); 
-                            }
-                        } catch (e) {
-                            setPlayerError("Lost connection to Host.");
-                        }
-                    };
-                    fetchRole(); 
-                    pollInterval = setInterval(fetchRole, 3000); 
+            const saveRoster = () => {
+                const playerList = rosterDraftPlayers.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+                if (!rosterDraftName.trim() || playerList.length === 0) {
+                    alert("Name and player list cannot be empty.");
+                    return;
                 }
-                return () => clearInterval(pollInterval);
-            }, [appMode, playerRoomInput, playerNameInput, deviceId]);
+                const newRoster = { id: editingRosterId || 'roster_' + Date.now(), name: rosterDraftName.trim(), players: playerList };
+                let updatedRosters = editingRosterId ? rosters.map(r => r.id === editingRosterId ? newRoster : r) : [...rosters, newRoster];
+                setRosters(updatedRosters);
+                setEditingRosterId(null);
+                setRosterDraftName("");
+                setRosterDraftPlayers("");
+                setIsEditingRoster(false);
+                if (currentRound.rosterId === newRoster.id && !currentRound.isStarted) applyRosterToRound(activeRound, newRoster.id, updatedRosters);
+                triggerProfileSave(updatedRosters, roundsData, roleDeck, useDefaultRoles);
+            };
 
+            const deleteRoster = (id) => {
+                if (rosters.length <= 1) {
+                    alert("You must keep at least one registration group.");
+                    return;
+                }
+                const updated = rosters.filter(r => r.id !== id);
+                setRosters(updated);
+                if (currentRound.rosterId === id && !currentRound.isStarted) applyRosterToRound(activeRound, updated[0].id, updated);
+                triggerProfileSave(updated, roundsData, roleDeck, useDefaultRoles);
+            };
 
-            // --- LANDING SCREEN ---
-            if (appMode === 'landing') {
+            const openRosterEdit = (roster) => {
+                setEditingRosterId(roster.id);
+                setRosterDraftName(roster.name);
+                setRosterDraftPlayers(roster.players.join('\n'));
+                setIsEditingRoster(true);
+            };
+
+            const openRosterCreate = () => {
+                setEditingRosterId(null);
+                setRosterDraftName("");
+                setRosterDraftPlayers("");
+                setIsEditingRoster(true);
+            };
+
+            const updateRoleDeck = (role, delta) => {
+                const updated = { ...roleDeck, [role]: Math.max(0, (roleDeck[role] || 0) + delta) };
+                setRoleDeck(updated);
+                triggerProfileSave(rosters, roundsData, updated, useDefaultRoles);
+            };
+
+            const handleToggleDefaultRoles = (val) => {
+                setUseDefaultRoles(val);
+                triggerProfileSave(rosters, roundsData, roleDeck, val);
+            };
+
+            const applyRosterToRound = (roundId, rosterId, currentRostersList = rosters) => {
+                const targetRoster = currentRostersList.find(r => r.id === rosterId) || currentRostersList[0];
+                const updatedRounds = { ...roundsData };
+                updatedRounds[roundId].rosterId = rosterId;
+                updatedRounds[roundId].players = targetRoster.players.map(cls => ({
+                    class: cls, role: "", isAlive: true, isRecentlyDead: false, isAbsent: false, isLover: false, isTurned: false
+                }));
+                setRoundsData(updatedRounds);
+                triggerProfileSave(currentRostersList, updatedRounds, roleDeck, useDefaultRoles);
+            };
+
+            const handleRoundRosterChange = (rosterId) => {
+                if (roundsData[activeRound].isStarted) return;
+                applyRosterToRound(activeRound, rosterId);
+            };
+
+            const startRound = async () => {
+                const round = roundsData[activeRound];
+                const activePlayers = round.players.filter(p => !p.isAbsent);
+                const currentDeck = useDefaultRoles ? { "Werewolf": 3, "Seer": 1, "Doctor": 1, "Witch": 1, "Serial Killer": 1, "Prince": 1, "Villager": Math.max(0, activePlayers.length - 8) } : roleDeck;
+                const pool = [];
+                Object.entries(currentDeck).forEach(([role, qty]) => {
+                    for (let i = 0; i < qty; i++) pool.push(role);
+                });
+                if (pool.length < activePlayers.length) {
+                    alert(`Not enough roles! Deck has ${pool.length} allocated for ${activePlayers.length} active players. Check role deck config.`);
+                    return;
+                }
+                for (let i = pool.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [pool[i], pool[j]] = [pool[j], pool[i]];
+                }
+                const updatedRounds = { ...roundsData };
+                const targetRound = updatedRounds[activeRound];
+                let poolIdx = 0;
+                targetRound.players.forEach(p => {
+                    if (!p.isAbsent) {
+                        p.role = pool[poolIdx];
+                        poolIdx++;
+                    } else {
+                        p.role = "";
+                    }
+                    p.isAlive = true;
+                    p.isRecentlyDead = false;
+                    p.isLover = false;
+                    p.isTurned = false;
+                });
+                targetRound.roomCode = generateRoomCode();
+                targetRound.isStarted = true;
+                targetRound.nightNumber = 1;
+                targetRound.witchUsedPotion = false;
+                targetRound.isVotingActive = false;
+                setRoundsData(updatedRounds);
+                setClientState({ votes: {}, revealedSheriffs: [] });
+                try {
+                    await fetch('/api/host-room', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roomCode: targetRound.roomCode, roundData: targetRound })
+                    });
+                    await fetch('/api/player-action', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roomCode: targetRound.roomCode, action: 'RESET_ALL' })
+                    });
+                } catch (e) {}
+                triggerProfileSave(rosters, updatedRounds, roleDeck, useDefaultRoles);
+            };
+
+            const endRound = () => {
+                if (!confirm("Are you sure you want to end this game? Connected phones will be kicked out.")) return;
+                const updatedRounds = { ...roundsData };
+                updatedRounds[activeRound] = {
+                    id: activeRound, name: updatedRounds[activeRound].name, rosterId: updatedRounds[activeRound].rosterId, roomCode: "", 
+                    isStarted: false, players: [], nightNumber: 1, witchUsedPotion: false, isVotingActive: false
+                };
+                setRoundsData(updatedRounds);
+                setClientState({ votes: {}, revealedSheriffs: [] });
+                applyRosterToRound(activeRound, updatedRounds[activeRound].rosterId);
+            };
+
+            const toggleVoting = async () => {
+                const updatedRounds = { ...roundsData };
+                const round = updatedRounds[activeRound];
+                round.isVotingActive = !round.isVotingActive;
+                setRoundsData(updatedRounds);
+                if (!round.isVotingActive) {
+                    await fetch('/api/player-action', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roomCode: round.roomCode, action: 'CLEAR_VOTES' })
+                    });
+                }
+                try {
+                    await fetch('/api/host-room', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roomCode: round.roomCode, roundData: round })
+                    });
+                } catch (e) {}
+            };
+
+            const clearAllVotes = async () => {
+                const round = roundsData[activeRound];
+                await fetch('/api/player-action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ roomCode: round.roomCode, action: 'CLEAR_VOTES' })
+                });
+                setClientState(prev => ({ ...prev, votes: {} }));
+            };
+
+            const toggleAlive = (index) => {
+                const newData = { ...roundsData };
+                const player = newData[activeRound].players[index];
+                const isLover = player.isLover;
+                let nextAlive = player.isAlive ? false : !player.isRecentlyDead;
+                let nextRecent = player.isAlive ? true : false;
+                player.isAlive = nextAlive;
+                player.isRecentlyDead = nextRecent;
+                if (isLover) newData[activeRound].players.forEach(p => {
+                    if (p.isLover && p !== player) {
+                        p.isAlive = nextAlive;
+                        p.isRecentlyDead = nextRecent;
+                    }
+                });
+                setRoundsData(newData);
+                syncHostStateToRedis(newData[activeRound]);
+            };
+
+            const toggleAbsent = (index) => {
+                if (roundsData[activeRound].isStarted) return;
+                const newData = { ...roundsData };
+                newData[activeRound].players[index].isAbsent = !newData[activeRound].players[index].isAbsent;
+                setRoundsData(newData);
+                triggerProfileSave(rosters, newData, roleDeck, useDefaultRoles);
+            };
+
+            const toggleLover = (index) => {
+                const newData = { ...roundsData };
+                newData[activeRound].players[index].isLover = !newData[activeRound].players[index].isLover;
+                setRoundsData(newData);
+                syncHostStateToRedis(newData[activeRound]);
+            };
+
+            const toggleTurned = (index) => {
+                const newData = { ...roundsData };
+                newData[activeRound].players[index].isTurned = !newData[activeRound].players[index].isTurned;
+                setRoundsData(newData);
+                syncHostStateToRedis(newData[activeRound]);
+            };
+
+            const advanceNight = () => {
+                const newData = { ...roundsData };
+                newData[activeRound].nightNumber += 1;
+                newData[activeRound].players.forEach(p => { p.isRecentlyDead = false; });
+                setRoundsData(newData);
+                syncHostStateToRedis(newData[activeRound]);
+            };
+
+            const syncHostStateToRedis = async (roundObj) => {
+                try {
+                    await fetch('/api/host-room', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roomCode: roundObj.roomCode, roundData: roundObj })
+                    });
+                } catch (e) {}
+                triggerProfileSave(rosters, roundsData, roleDeck, useDefaultRoles);
+            };
+
+            const sortPlayersByNightDeck = () => {
+                const newData = { ...roundsData };
+                const players = [...newData[activeRound].players];
+                const playerSortKeys = new Map();
+                players.forEach(p => {
+                    if (p.isAbsent || !p.isAlive) playerSortKeys.set(p.class, 999);
+                    else {
+                        let score = 100;
+                        if (p.role === 'Cupid') score = 1;
+                        else if (p.role === 'Serial Killer') score = 2;
+                        else if (p.role.includes('Werewolf')) score = 3;
+                        else if (p.role === 'Doctor') score = 4;
+                        else if (p.role === 'Seer') score = 5;
+                        else if (p.role === 'Witch') score = 6;
+                        else if (p.role === 'Red Lady') score = 7;
+                        if (['Seer', 'Witch', 'Doctor', 'Cupid'].includes(p.role)) score = 20;
+                        playerSortKeys.set(p.class, score);
+                    }
+                });
+                players.sort((a, b) => playerSortKeys.get(a.class) - playerSortKeys.get(b.class));
+                newData[activeRound].players = players;
+                setRoundsData(newData);
+            };
+
+            const unlockPlayer = async (playerName) => {
+                try {
+                    const response = await fetch('/api/player-action', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            roomCode: roundsData[activeRound].roomCode,
+                            action: 'UNLOCK_PLAYER',
+                            target: playerName
+                        })
+                    });
+                    if (response.ok) {
+                        alert(`${playerName} has been unlocked!`);
+                    } else {
+                        const data = await response.json();
+                        alert(`Error unlocking: ${data.error}`);
+                    }
+                } catch (err) {
+                    alert("Failed to connect to the server.");
+                }
+            };
+
+            const handlePlayerConnect = async (e) => {
+                e.preventDefault();
+                setPlayerError("");
+                setPlayerData(null);
+                if (!playerRoomInput.trim() || !playerClassInput.trim()) {
+                    setPlayerError("Please enter both Room Code and select your Seat ID.");
+                    return;
+                }
+                const rawName = playerClassInput.trim().toUpperCase();
+                const matched = ALL_CLASSES.find(c => c.toUpperCase() === rawName);
+                if (!matched) {
+                    setPlayerError("Invalid Seat ID selected.");
+                    return;
+                }
+                setResolvedPlayerName(matched);
+                setIsLoading(true);
+                try {
+                    const r = await fetch(`/api/get-role?roomCode=${playerRoomInput.trim()}&playerName=${matched}&deviceId=${deviceId}`);
+                    if (r.ok) {
+                        const data = await r.json();
+                        setPlayerData(data);
+                        setAppMode('player');
+                    } else {
+                        const data = await r.json();
+                        setPlayerError(data.error || "Room not found or slot locked.");
+                    }
+                } catch (err) {
+                    setPlayerError("Could not connect to server.");
+                }
+                setIsLoading(false);
+            };
+
+            const exitPlayerMode = () => {
+                setAppMode('landing');
+                setPlayerData(null);
+                setResolvedPlayerName("");
+                setPlayerRoomInput("");
+                setPlayerClassInput("");
+                setPlayerError("");
+            };
+
+            if (isLoading) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-4">
-                        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
-                            
-                            <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 flex flex-col justify-between">
-                                <div>
-                                    <h2 className="text-2xl font-black mb-2 flex items-center gap-2"><Smartphone className="text-blue-400"/> Join Game</h2>
-                                    <p className="text-slate-400 text-sm mb-6">Enter the code on the host's screen to view your secret role.</p>
-                                    
-                                    {playerError && <div className="mb-4 bg-red-900/30 border border-red-900 p-3 rounded-lg text-red-400 font-bold text-sm text-center">{playerError}</div>}
-
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Room Code</label>
-                                            <input type="text" maxLength="4" className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white text-xl font-bold uppercase text-center outline-none focus:border-blue-500" placeholder="ABCD" value={playerRoomInput} onChange={(e) => setPlayerRoomInput(e.target.value.toUpperCase())} />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Your Name / Class</label>
-                                            <input type="text" className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white outline-none focus:border-blue-500" placeholder="e.g. 1A" value={playerNameInput} onChange={(e) => setPlayerNameInput(e.target.value)} />
-                                        </div>
-                                    </div>
-                                </div>
-                                <button 
-                                    onClick={() => { 
-                                        const cleanRoom = playerRoomInput.trim().toUpperCase();
-                                        const cleanName = playerNameInput.trim();
-                                        if(cleanRoom && cleanName) {
-                                            setPlayerRoomInput(cleanRoom);
-                                            setPlayerNameInput(cleanName);
-                                            setPlayerError("");
-                                            setAppMode('player'); 
-                                        }
-                                    }}
-                                    className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all"
-                                >
-                                    Connect Device
-                                </button>
-                            </div>
-
-                            <div className="bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700 flex flex-col justify-center items-center text-center">
-                                <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase italic mb-2">Werewolf Hub</h1>
-                                <p className="text-slate-400 mb-8">Host a Tournament</p>
-                                
-                                {isLoading ? (
-                                    <div className="text-center text-slate-400 font-bold py-8">Checking Session...</div>
-                                ) : (
-                                    <div className="flex flex-col items-center gap-4">
-                                        <div id="google-signin-button"></div>
-                                        {loginError && <div className="text-red-400 text-sm font-bold text-center bg-red-900/20 p-2 rounded-lg border border-red-900/50 w-full">{loginError}</div>}
-                                    </div>
-                                )}
-                            </div>
-
+                    <div class="flex items-center justify-center min-h-screen bg-slate-950">
+                        <div class="text-center">
+                            <div class="inline-block w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                            <p class="text-slate-400 font-bold tracking-widest text-sm uppercase animate-pulse">Synchronizing Engine...</p>
                         </div>
                     </div>
                 );
             }
 
-            // --- PLAYER SCREEN ---
-            if (appMode === 'player') {
-                const getRoleDescription = (role) => {
-                    if (!role) return "";
-                    if (role.includes("Werewolf")) return ROLE_DESCRIPTIONS["Werewolf"];
-                    return ROLE_DESCRIPTIONS[role] || "";
-                };
+            const currentRound = roundsData[activeRound] || { id: activeRound, rosterId: 'r1', roomCode: "", isStarted: false, players: [] };
+            const selectedRoster = rosters.find(r => r.id === currentRound.rosterId) || rosters[0];
 
-                const resolvedPlayerName = (playerData && playerData.alivePlayers)
-                    ? (playerData.alivePlayers.find(p => p.toLowerCase() === playerNameInput.toLowerCase().trim()) || playerNameInput.trim())
-                    : playerNameInput.trim();
+            const voteTally = {};
+            currentRound.players.forEach(p => { voteTally[p.class] = 0; });
+            if (clientState.votes) {
+                Object.values(clientState.votes).forEach(targetName => {
+                    if (voteTally[targetName] !== undefined) voteTally[targetName]++;
+                });
+            }
 
+            const getPlayerVote = (pName) => {
+                if (!clientState.votes) return null;
+                return clientState.votes[pName] || null;
+            };
+
+            const isRevealedSheriff = (pName) => {
+                if (!clientState.revealedSheriffs) return false;
+                return clientState.revealedSheriffs.some(s => s.toLowerCase() === pName.toLowerCase());
+            };
+
+            if (appMode === 'landing') {
                 return (
-                    <div className="min-h-screen flex flex-col items-center justify-start py-12 px-6 bg-slate-950 relative overflow-y-auto">
-                        
-                        <div className="w-full max-w-sm my-auto text-center relative pt-8">
-                            <button onClick={() => { setAppMode('landing'); setPlayerData(null); }} className="absolute -top-6 left-0 text-slate-500 hover:text-white font-bold text-sm">← Leave Room</button>
-                            
-                            {playerError ? (
-                                <div className="bg-red-900/20 border border-red-900 p-6 rounded-2xl mt-4">
-                                    <h3 className="text-red-500 font-bold mb-2">Wait a second...</h3>
-                                    <p className="text-slate-300">{playerError}</p>
-                                    <p className="text-xs text-slate-500 mt-4">Make sure you spelled your name exactly as it appears on the Host's screen.</p>
+                    <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-screen">
+                        <div className="text-center mb-12">
+                            <div className="inline-flex p-4 bg-blue-600/10 border border-blue-500/20 rounded-3xl mb-4 text-blue-500 shadow-[0_0_50px_rgba(37,99,235,0.1)]">
+                                <Moon size={48} className="animate-pulse" />
+                            </div>
+                            <h1 className="text-5xl font-black tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-500 bg-clip-text text-transparent uppercase mb-2">Werewolf Matrix</h1>
+                            <p className="text-slate-400 font-medium max-w-md mx-auto">Real-time dynamic system for werewolf tournament administration and hidden identity routing.</p>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
+                            <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-xl flex flex-col justify-between hover:border-slate-700 transition-all">
+                                <div>
+                                    <div className="w-12 h-12 bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center mb-6">
+                                        <Smartphone size={24} />
+                                    </div>
+                                    <h2 className="text-2xl font-bold mb-2">Player Device Connection</h2>
+                                    <p className="text-slate-400 text-sm mb-6 leading-relaxed">Connect to an active tournament room to view your secret role, check status parameters, and participate in verified voting matrices.</p>
                                 </div>
-                            ) : !playerData ? (
-                                <div className="animate-pulse text-slate-400 font-bold text-xl mt-4">Connecting to Host...</div>
+                                <form onSubmit={handlePlayerConnect} className="space-y-4">
+                                    {playerError && <div className="bg-red-900/30 border border-red-900 p-3 rounded-xl text-red-400 font-bold text-xs text-center">{playerError}</div>}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Room Code</label>
+                                            <input type="text" maxLength="4" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-bold uppercase text-center outline-none focus:border-indigo-500" placeholder="ABCD" value={playerRoomInput} onChange={(e) => setPlayerRoomInput(e.target.value.toUpperCase())} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Seat ID</label>
+                                            <select className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-bold text-center outline-none focus:border-indigo-500 appearance-none cursor-pointer" value={playerClassInput} onChange={(e) => setPlayerClassInput(e.target.value)} >
+                                                <option value="">Select ID...</option>
+                                                {ALL_CLASSES.map(cls => <option key={cls} value={cls}>{cls}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold p-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                                        Join Session Matrix
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-xl flex flex-col justify-between hover:border-slate-700 transition-all">
+                                <div>
+                                    <div className="w-12 h-12 bg-blue-600/10 border border-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center mb-6">
+                                        <Shield size={24} />
+                                    </div>
+                                    <h2 className="text-2xl font-bold mb-2">Host Administration</h2>
+                                    <p className="text-slate-400 text-sm mb-6 leading-relaxed">Authenticate with Google to setup player databases, monitor vote distributions, manage state changes, and coordinate rounds.</p>
+                                </div>
+                                <div className="space-y-4">
+                                    {loginError && <div className="bg-red-900/30 border border-red-900 p-3 rounded-xl text-red-400 font-bold text-xs text-center">{loginError}</div>}
+                                    <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col items-center justify-center">
+                                        <div id="google-login-btn-container" className="my-2">
+                                            <div className="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="filled_blue" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+                                        </div>
+                                        <script dangerouslySetInnerHTML={{__html: `
+                                            window.onload = function () {
+                                                if (window.google) {
+                                                    google.accounts.id.initialize({
+                                                        client_id: "870634629474-or2dfi899990bkaocq7g2r0bglq60ofq.apps.googleusercontent.com",
+                                                        callback: function(res) {
+                                                            const btn = document.getElementById('hidden-trigger-btn');
+                                                            if(btn) {
+                                                                window.__google_res = res;
+                                                                btn.click();
+                                                            }
+                                                        }
+                                                    });
+                                                    google.accounts.id.renderButton(
+                                                        document.getElementById("google-login-btn-container"),
+                                                        { theme: "filled_blue", size: "large", text: "signin_with", width: "250" }
+                                                    );
+                                                }
+                                            }
+                                        `}} />
+                                        <button id="hidden-trigger-btn" className="hidden" onClick={() => { if(window.__google_res) handleGoogleLogin(window.__google_res); }}></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (appMode === 'player') {
+                return (
+                    <div className="max-w-md mx-auto px-4 py-8 min-h-screen flex flex-col justify-between">
+                        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
+                            
+                            <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
+                                <div>
+                                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Active Matrix</div>
+                                    <div className="text-xl font-black text-white">Seat {resolvedPlayerName} <span className="text-sm font-bold text-slate-500">({playerRoomInput})</span></div>
+                                </div>
+                                <button onClick={exitPlayerMode} className="p-2 bg-slate-900 border border-slate-800 hover:bg-slate-700 rounded-xl text-slate-400">
+                                    Disconnect
+                                </button>
+                            </div>
+
+                            {!playerData ? (
+                                <div className="text-center py-12">
+                                    <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                    <p className="text-slate-400 text-sm font-bold uppercase tracking-wider">Awaiting dynamic setup assignment...</p>
+                                </div>
                             ) : !playerData.isStarted ? (
-                                <div className="bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl mt-4">
-                                    <Moon className="mx-auto text-indigo-400 mb-4" size={48} />
-                                    <h2 className="text-2xl font-bold text-white mb-2">Connected!</h2>
-                                    <p className="text-slate-400">Look at the main screen. Waiting for the host to deal the cards...</p>
+                                <div className="text-center py-12">
+                                    <CheckCircle2 className="text-green-500 mx-auto mb-4 animate-bounce" size={48} />
+                                    <h3 className="text-2xl font-bold text-white mb-2">Connected</h3>
+                                    <p className="text-slate-400 text-sm leading-relaxed">Your identity has been locked to this screen. Please wait for the host to initialize assignments.</p>
                                 </div>
                             ) : !playerData.isAlive ? (
-                                <div className="bg-red-950/50 p-8 rounded-3xl border border-red-900 shadow-[0_0_50px_rgba(220,38,38,0.1)] mt-4">
+                                <div className="bg-red-950/50 p-8 rounded-3xl border border-red-900 shadow-[0_0_50px_rgba(220,38,38,0.1)] mt-4 text-center">
                                     <Skull className="mx-auto text-red-500 mb-4" size={64} />
                                     <h2 className="text-4xl font-black text-red-500 uppercase tracking-widest mb-2">You Died</h2>
                                     <p className="text-red-300/70">Please remain silent for the rest of the game.</p>
-                                    <div className="mt-6 pt-6 border-t border-red-900/50">
-                                        <p className="text-sm text-red-400/50 uppercase font-bold tracking-widest">Your Role Was</p>
-                                        <p className="text-xl font-bold text-red-400">{playerData.role}</p>
+                                    <div className="mt-6 pt-6 border-t border-red-900/50 flex flex-col gap-2">
+                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned Identity</div>
+                                        <div className="text-lg font-black text-red-400">{playerData.role}</div>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="bg-slate-800 p-8 rounded-3xl border border-slate-600 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative">
-                                    <div className="text-sm text-slate-400 uppercase font-bold tracking-widest mb-1">Your Secret Role</div>
-                                    <h2 className="text-4xl font-black text-white mb-4 bg-gradient-to-br from-white to-slate-400 text-transparent bg-clip-text">{playerData.role}</h2>
-                                    
-                                    <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4 mb-6 shadow-inner text-left">
-                                        <p className="text-sm text-slate-300 leading-relaxed">
-                                            {getRoleDescription(playerData.role)}
-                                        </p>
+                                <div className="space-y-6">
+                                    <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-6 text-center shadow-inner relative group">
+                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Your Secret Identity</div>
+                                        <div className="text-4xl font-black text-white uppercase tracking-wide bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent filter blur-md hover:blur-none transition-all duration-300 cursor-pointer py-2 select-none">
+                                            {playerData.role}
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 mt-2 font-medium">Hover or tap and hold to view your secret role.</p>
+                                        <div className="mt-4 text-left border-t border-slate-800 pt-4 text-xs text-slate-400 leading-relaxed font-medium">
+                                            {ROLE_DESCRIPTIONS[playerData.role] || "No description loaded."}
+                                        </div>
                                     </div>
 
-                                    {/* SHERIFF REVEAL BUTTON - SENDS DEVICE ID */}
-                                    {playerData.role === 'Sheriff' && !playerData.hasRevealedSheriff && (
-                                        <button 
-                                            onClick={() => {
-                                                if(window.confirm("Reveal yourself as the Sheriff? This cannot be undone and your vote will permanently count for 2.")) {
-                                                    fetch('/api/player-action', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: resolvedPlayerName, action: 'REVEAL_SHERIFF', deviceId })
-                                                    });
-                                                    setPlayerData(prev => ({...prev, hasRevealedSheriff: true}));
-                                                }
-                                            }}
-                                            className="w-full mb-6 bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-slate-900 font-black py-3 px-4 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.3)] transition-all uppercase tracking-widest flex items-center justify-center gap-2"
-                                        >
-                                            <Star fill="currentColor" size={20} /> Reveal as Sheriff
-                                        </button>
-                                    )}
-
-                                    {playerData.hasRevealedSheriff && (
-                                        <div className="mb-6 bg-yellow-900/30 border border-yellow-700/50 rounded-xl p-3 flex flex-col items-center justify-center gap-1 text-yellow-500 font-bold uppercase tracking-widest shadow-inner">
-                                            <div className="flex items-center gap-2"><Star fill="currentColor" size={18} /> Sheriff Revealed</div>
-                                            <div className="text-xs text-yellow-600/70 normal-case font-normal">Your vote counts as double</div>
-                                        </div>
-                                    )}
-
-                                    {playerData.isLover && (
-                                        <div className="bg-pink-950/30 border border-pink-900/50 rounded-xl p-3 mb-4 flex flex-col items-center justify-center gap-2 text-pink-400 font-bold">
-                                            <div className="flex items-center gap-2">
-                                                <Heart size={18} fill="currentColor" /> You are in love
-                                            </div>
-                                            {playerData.lovers && playerData.lovers.length > 0 && (
-                                                <div className="text-sm font-normal mt-1 border-t border-pink-900/50 pt-2 w-full text-center text-pink-300">
-                                                    Partner: {playerData.lovers.map(l => `${l.name} (${l.role})`).join(', ')}
+                                    {playerData.isLover && playerData.lovers && playerData.lovers.length > 0 && (
+                                        <div className="bg-pink-950/30 border border-pink-900/50 rounded-2xl p-4 flex items-center gap-4">
+                                            <Heart className="text-pink-500 flex-shrink-0" size={28} fill="currentColor" />
+                                            <div>
+                                                <div className="text-xs font-bold text-pink-400 uppercase tracking-wider">Cupid Lovers Element</div>
+                                                <div className="text-sm font-medium text-pink-200">
+                                                    Linked with <span className="font-black">{playerData.lovers.map(l => `${l.name} (${l.role})`).join(', ')}</span>. If they die, you die.
                                                 </div>
-                                            )}
-                                        </div>
-                                    )}
-                                    {playerData.isTurned && (
-                                        <div className="bg-red-950/30 border border-red-900/50 rounded-xl p-3 mb-4 flex items-center justify-center gap-2 text-red-400 font-bold">
-                                            <Moon size={18} fill="currentColor" /> You have been bitten! You are now a Werewolf.
+                                            </div>
                                         </div>
                                     )}
 
-                                    {/* LIVE VOTING UI - SENDS DEVICE ID */}
+                                    {playerData.isTurned && (
+                                        <div className="bg-orange-950/30 border border-orange-900/50 rounded-2xl p-4 flex items-center gap-4">
+                                            <Moon className="text-orange-500 flex-shrink-0" size={28} />
+                                            <div>
+                                                <div className="text-xs font-bold text-orange-400 uppercase tracking-wider">Dynamic Condition: Turned</div>
+                                                <div className="text-sm font-medium text-orange-200">
+                                                    You have been bit. You now secretly operate inside the Werewolf win criteria.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {playerData.isVotingActive && (
-                                        <div className="bg-blue-950/50 border border-blue-800/50 rounded-xl p-5 mt-6 shadow-inner text-left">
-                                            <h3 className="font-bold text-blue-400 mb-3 text-center uppercase tracking-widest text-sm">Vote to Lynch</h3>
+                                        <div className="bg-blue-950/30 border border-blue-900/50 rounded-2xl p-4">
+                                            <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Active Lynch Vote Matrix</div>
                                             <select 
-                                                className="w-full bg-slate-900 text-white font-bold border border-blue-900/50 rounded-xl p-3 mb-3 outline-none focus:border-blue-500 cursor-pointer"
+                                                className="w-full bg-slate-950 text-white font-bold border border-blue-900/50 rounded-xl p-3 mb-3 outline-none focus:border-blue-500 cursor-pointer" 
                                                 onChange={(e) => {
                                                     const target = e.target.value.trim();
                                                     fetch('/api/player-action', {
@@ -426,378 +742,365 @@
                                                 value={playerData.myVote || ""}
                                             >
                                                 <option value="" disabled>Select who to lynch...</option>
-                                                {playerData.alivePlayers && playerData.alivePlayers.filter(p => p.toLowerCase() !== resolvedPlayerName.toLowerCase()).map(p => (
-                                                    <option key={p} value={p}>{p}</option>
-                                                ))}
+                                                {ALL_CLASSES.filter(c => c !== resolvedPlayerName).map(c => <option key={c} value={c}>Seat {c}</option>)}
+                                                <option value="ABSTAIN">Abstain</option>
                                             </select>
-                                            {playerData.myVote && <div className="text-sm text-blue-300 font-medium text-center bg-blue-900/30 py-2 rounded-lg border border-blue-800/30">You voted for <strong>{playerData.myVote}</strong></div>}
+                                            {playerData.myVote && (
+                                                <div className="text-center text-xs font-bold text-blue-400 bg-blue-950/50 rounded-lg p-2 border border-blue-900/30">
+                                                    Current broadcast signature: Voted for {playerData.myVote}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
-                                    <div className="mt-8 pt-6 border-t border-slate-700">
-                                        <p className="text-sm text-slate-400 italic">"Keep this screen hidden from other players."</p>
+                                    <div className="pt-2">
+                                        <button 
+                                            disabled={playerData.hasRevealedSheriff} 
+                                            onClick={() => {
+                                                if (confirm("Reveal your identity as Sheriff to the entire room?")) {
+                                                    fetch('/api/player-action', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ roomCode: playerRoomInput.trim(), playerName: resolvedPlayerName, action: 'REVEAL_SHERIFF', deviceId })
+                                                    });
+                                                    setPlayerData(prev => ({ ...prev, hasRevealedSheriff: true }));
+                                                }
+                                            }}
+                                            className={`w-full font-bold p-3 rounded-xl transition-all flex items-center justify-center gap-2 border ${playerData.hasRevealedSheriff ? 'bg-slate-950 border-slate-800 text-slate-500 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800 border-yellow-600/30 text-yellow-500'}`}
+                                        >
+                                            {playerData.hasRevealedSheriff ? 'Sheriff Identity Disclosed' : 'Reveal as Sheriff'}
+                                        </button>
                                     </div>
                                 </div>
                             )}
                         </div>
-                    </div>
-                )
-            }
-
-
-            // --- HOST SCREEN ---
-            const currentRound = roundsData[activeRound];
-
-            const getPlayerVote = (playerClass) => {
-                const voteKey = Object.keys(clientState.votes || {}).find(k => k.toLowerCase() === playerClass.toLowerCase().trim());
-                if (!voteKey) return null;
-                const rawTarget = clientState.votes[voteKey];
-                const targetObj = currentRound.players.find(p => p.class.toLowerCase() === rawTarget.toLowerCase().trim());
-                return targetObj ? targetObj.class : rawTarget;
-            };
-
-            const isRevealedSheriff = (playerClass) => {
-                return (clientState.revealedSheriffs || []).some(s => s.toLowerCase() === playerClass.toLowerCase().trim());
-            };
-
-            const getVoteTally = () => {
-                const tally = {};
-                Object.entries(clientState.votes || {}).forEach(([voter, target]) => {
-                    const voterObj = currentRound.players.find(p => p.class.toLowerCase() === voter.toLowerCase().trim());
-                    if (voterObj && voterObj.isAlive) {
-                        let weight = 1;
-                        if (isRevealedSheriff(voterObj.class)) weight = 2;
-                        
-                        const targetObj = currentRound.players.find(p => p.class.toLowerCase() === target.toLowerCase().trim());
-                        if (targetObj) {
-                            tally[targetObj.class] = (tally[targetObj.class] || 0) + weight;
-                        }
-                    }
-                });
-                return tally;
-            };
-            const voteTally = getVoteTally();
-
-            const toggleVoting = async () => {
-                const newData = { ...roundsData };
-                const isNowActive = !newData[activeRound].isVotingActive;
-                newData[activeRound].isVotingActive = isNowActive;
-                setRoundsData(newData);
-                
-                if (!isNowActive) {
-                    await fetch('/api/player-action', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ roomCode: roomCode.trim(), action: 'CLEAR_VOTES' })
-                    });
-                    setClientState(prev => ({ ...prev, votes: {} }));
-                }
-            };
-
-            const applyRosterToRound = (rosterId) => {
-                const roster = rosters.find(r => r.id === rosterId);
-                if (!roster) return;
-                const newData = { ...roundsData };
-                newData[activeRound] = { ...newData[activeRound], rosterId: rosterId, players: roster.players.map(c => ({ class: c, role: null, isAbsent: false, isAlive: true, isRecentlyDead: false, isLover: false, isTurned: false })) };
-                setRoundsData(newData);
-            };
-
-            const saveRosterDraft = () => {
-                const playerList = rosterDraftPlayers.split(/[\n,]+/).map(p => p.trim()).filter(p => p.length > 0);
-                if (playerList.length === 0 || !rosterDraftName.trim()) { alert("Name and player list cannot be empty."); return; }
-                const newRoster = { id: editingRosterId || 'roster_' + Date.now(), name: rosterDraftName.trim(), players: playerList };
-                let updatedRosters = editingRosterId ? rosters.map(r => r.id === editingRosterId ? newRoster : r) : [...rosters, newRoster];
-                setRosters(updatedRosters); setEditingRosterId(null); setRosterDraftName(""); setRosterDraftPlayers(""); setIsEditingRoster(false);
-                if (currentRound.rosterId === newRoster.id && !currentRound.isStarted) applyRosterToRound(newRoster.id); 
-            };
-
-            const deleteRoster = (id) => {
-                if (rosters.length <= 1) { alert("You must have at least one player group."); return; }
-                if (confirm("Delete this group? It won't affect running games.")) {
-                    const remainingRosters = rosters.filter(r => r.id !== id);
-                    setRosters(remainingRosters);
-                    if (currentRound.rosterId === id && !currentRound.isStarted) applyRosterToRound(remainingRosters[0].id);
-                }
-            };
-
-            const openRosterEditor = (roster = null) => {
-                if (roster) { setEditingRosterId(roster.id); setRosterDraftName(roster.name); setRosterDraftPlayers(roster.players.join('\n')); } 
-                else { setEditingRosterId(null); setRosterDraftName(""); setRosterDraftPlayers(""); }
-                setIsEditingRoster(true);
-            };
-            const unlockPlayer = async (playerName) => {
-                try {
-                const response = await fetch('/api/player-action', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        roomCode: currentRound.roomCode,
-                        action: 'UNLOCK_PLAYER',
-                        target: playerName
-                    })
-                });
-                
-                if (response.ok) {
-                    alert(`${playerName} has been unlocked! Tell them to refresh and reconnect.`);
-                } else {
-                    const data = await response.json();
-                    alert(`Error unlocking: ${data.error}`);
-                }
-            } catch (err) {
-                alert("Failed to connect to the server.");
-            }
-        };
-            const toggleAbsence = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isAbsent = !newData[activeRound].players[index].isAbsent; setRoundsData(newData); };
-
-            const assignRoles = async () => {
-                const activePlayers = currentRound.players.filter(p => !p.isAbsent);
-                const count = activePlayers.length;
-                let rolesToUse = [];
-
-                if (useDefaultRoles) {
-                    rolesToUse = [...INITIAL_ROLES].slice(0, count);
-                    while (rolesToUse.length < count) rolesToUse.push("Villager");
-                } else {
-                    Object.entries(roleDeck).forEach(([role, amount]) => { for (let i = 0; i < amount; i++) rolesToUse.push(role); });
-                    if (rolesToUse.length > count) rolesToUse = rolesToUse.slice(0, count); 
-                    else while (rolesToUse.length < count) rolesToUse.push("Villager");
-                }
-
-                for (let i = rolesToUse.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rolesToUse[i], rolesToUse[j]] = [rolesToUse[j], rolesToUse[i]]; }
-                
-                const newData = { ...roundsData }; let roleIdx = 0;
-                newData[activeRound].players.forEach((p) => { if (!p.isAbsent) { p.role = rolesToUse[roleIdx++]; p.isAlive = true; p.isLover = false; p.isRecentlyDead = false; p.isTurned = false; } else { p.role = null; } });
-                newData[activeRound].isStarted = true; newData[activeRound].nightNumber = 1; newData[activeRound].witchUsedPotion = false; newData[activeRound].isVotingActive = false;
-                setRoundsData(newData);
-
-                await fetch('/api/player-action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ roomCode: roomCode.trim(), action: 'RESET_ALL' }) });
-                setClientState({ votes: {}, revealedSheriffs: [] });
-            };
-
-            const toggleAlive = (index) => {
-                const newData = { ...roundsData }; 
-                const player = newData[activeRound].players[index];
-
-                const isLover = player.isLover;
-                let nextAlive = player.isAlive ? false : !player.isRecentlyDead;
-                let nextRecent = player.isAlive ? true : false;
-                player.isAlive = nextAlive; player.isRecentlyDead = nextRecent;
-                if (isLover) newData[activeRound].players.forEach(p => { if (p.isLover && p !== player) { p.isAlive = nextAlive; p.isRecentlyDead = nextRecent; } });
-                setRoundsData(newData);
-            };
-
-            const toggleLover = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isLover = !newData[activeRound].players[index].isLover; setRoundsData(newData); };
-            const toggleTurned = (index) => { const newData = { ...roundsData }; newData[activeRound].players[index].isTurned = !newData[activeRound].players[index].isTurned; setRoundsData(newData); };
-
-            // Host Reset - Clears Locks via Backend Call
-            const resetRound = async () => {
-                if(!window.confirm(`Reset Round ${activeRound}? All game progress for this round will be lost.`)) return;
-                const roster = rosters.find(r => r.id === currentRound.rosterId) || rosters[0];
-                const newData = { ...roundsData }; newData[activeRound] = { rosterId: roster.id, players: roster.players.map(c => ({ class: c, role: null, isAbsent: false, isAlive: true, isRecentlyDead: false, isLover: false, isTurned: false })), isStarted: false, nightNumber: 1, witchUsedPotion: false, isVotingActive: false };
-                setRoundsData(newData); setCompletedNightCalls([]); setShowRoles(false);
-
-                await fetch('/api/player-action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ roomCode: roomCode.trim(), action: 'RESET_ALL' }) });
-                setClientState({ votes: {}, revealedSheriffs: [] });
-            };
-
-            const updateRoleDeck = (role, increment) => setRoleDeck(prev => ({ ...prev, [role]: Math.max(0, (prev[role] || 0) + increment) }));
-            const getRoleColor = (role, isTurned) => { if (!role) return ''; if (role.includes('Werewolf') || isTurned) return 'text-red-400'; if (role === 'Serial Killer' || role === 'Fool') return 'text-yellow-400'; return 'text-blue-400'; };
-            const sortByClassOrder = () => { const newData = { ...roundsData }; newData[activeRound].players.sort((a, b) => { if (a.isAbsent && !b.isAbsent) return 1; if (!a.isAbsent && b.isAbsent) return -1; if (a.isAbsent && b.isAbsent) return 0; return a.class.localeCompare(b.class, undefined, { numeric: true }); }); setRoundsData(newData); };
-            const sortByRoleOrder = () => { const newData = { ...roundsData }; const players = [...newData[activeRound].players]; const playerSortKeys = new Map(); players.forEach(p => { if (p.isAbsent || !p.role) { playerSortKeys.set(p.class, 9999); } else { let score = 50; if(p.role.includes('Werewolf')) score = 10; if(['Seer', 'Witch', 'Doctor', 'Cupid'].includes(p.role)) score = 20; playerSortKeys.set(p.class, score); } }); players.sort((a, b) => playerSortKeys.get(a.class) - playerSortKeys.get(b.class)); newData[activeRound].players = players; setRoundsData(newData); };
-
-            const aliveRolesList = currentRound.players.filter(p => (p.isAlive || p.isRecentlyDead) && !p.isAbsent && p.role).map(p => p.role);
-            const assignedRolesList = currentRound.players.filter(p => !p.isAbsent && p.role).map(p => p.role);
-            const hasAssigned = (category) => category === "Werewolves" ? assignedRolesList.some(r => r.includes("Werewolf")) : assignedRolesList.includes(category);
-            const hasAlive = (category) => category === "Werewolves" ? currentRound.players.some(p => (p.isAlive || p.isRecentlyDead) && !p.isAbsent && (p.role?.includes("Werewolf") || p.isTurned)) : aliveRolesList.includes(category);
-            const nightCalls = NIGHT_ORDER.filter(role => hasAssigned(role));
-
-            return (
-                <div className="font-sans p-4 md:p-8">
-                <header className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-600 uppercase italic">Werewolf Hub</h1>
-                        <div className="flex items-center gap-2 text-slate-400 font-medium">
-                            <span className="text-white text-xs bg-slate-800 px-2 py-1 rounded-md">{userEmail}</span>
-                            <button onClick={handleLogout} className="text-xs hover:text-red-400 ml-2" title="Logout"><LogOut size={14} /></button>
+                        <div className="text-center text-[10px] font-bold tracking-widest text-slate-600 uppercase mt-4">
+                            System Engine v1.1.0 // Auth Lock Validated
                         </div>
                     </div>
+                );
+            }
 
-                    <div className="bg-blue-900/50 border border-blue-500/50 px-6 py-2 rounded-xl flex items-center gap-4">
-                        <div className="text-xs text-blue-300 font-bold uppercase tracking-widest text-right leading-tight">Players<br/>Join At</div>
-                        <div className="text-2xl font-black tracking-widest text-white">{roomCode}</div>
-                        <button onClick={() => setRoomCode(generateRoomCode())} className="ml-2 text-blue-400 hover:text-white" title="Generate New Room Code"><RotateCcw size={16}/></button>
-                    </div>
-
-                    <div className="flex bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-700">
-                    {[1, 2, 3, 4].map(r => ( <button key={r} onClick={() => setActiveRound(r)} className={`px-6 py-2 rounded-lg font-bold transition-all ${activeRound === r ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400'}`}>Round {r}</button> ))}
-                    </div>
-                </header>
-
-                <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <section className="lg:col-span-7 space-y-6">
-                    <div className="rounded-3xl p-6 border shadow-xl bg-slate-800 border-slate-700">
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                            <h2 className="text-xl font-bold flex items-center gap-2"><Users className="text-orange-500" /> Player Board</h2>
-                            <div className="flex flex-wrap gap-2 items-center">
-                                {!currentRound.isStarted && (
-                                    <div className="flex items-center gap-1 mr-2 bg-slate-900/60 p-1 rounded-xl border border-slate-700">
-                                        <select className="bg-transparent text-sm font-bold text-slate-300 outline-none cursor-pointer pl-2 max-w-[150px]" value={currentRound.rosterId || 'default'} onChange={(e) => applyRosterToRound(e.target.value)}>
-                                            {rosters.map(r => <option key={r.id} value={r.id} className="bg-slate-800">{r.name}</option>)}
-                                        </select>
-                                        <button onClick={() => { setIsManageModalOpen(true); setActiveSettingsTab('groups'); }} className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400"><Settings size={16} /></button>
+            if (appMode === 'host') {
+                return (
+                    <div className="flex h-screen overflow-hidden bg-slate-950">
+                        <div className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col justify-between flex-shrink-0">
+                            <div>
+                                <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-md">W</div>
+                                        <span className="font-black text-white tracking-wider uppercase text-sm">Control Unit</span>
                                     </div>
-                                )}
-                                {currentRound.isStarted && (
-                                    <div className="flex items-center bg-slate-900/80 rounded-xl border border-slate-700 shadow-inner overflow-hidden mr-2">
-                                        <button onClick={sortByClassOrder} className="px-3 py-1.5 text-xs font-bold hover:bg-slate-700 text-slate-400 hover:text-white border-r border-slate-700">A-Z</button>
-                                        <button onClick={sortByRoleOrder} className="px-3 py-1.5 text-xs font-bold hover:bg-slate-700 text-slate-400 hover:text-white">ROLE</button>
-                                    </div>
-                                )}
-                                {currentRound.isStarted && <div className="px-4 py-1.5 bg-slate-900/50 rounded-xl text-sm font-bold border border-slate-700/50">Alive: <span className="text-green-400">{currentRound.players.filter(p => p.isAlive && !p.isAbsent && p.role).length}</span> / {currentRound.players.filter(p => !p.isAbsent && p.role).length}</div>}
-                                
-                                {currentRound.isStarted && (
-                                    <button 
-                                        onClick={toggleVoting} 
-                                        className={`px-4 py-1.5 rounded-xl text-sm font-bold border transition-all ${currentRound.isVotingActive ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'bg-slate-800 text-blue-400 border-blue-900/50 hover:bg-slate-700'}`}
-                                    >
-                                        {currentRound.isVotingActive ? 'End Voting' : 'Start Vote'}
+                                    <button onClick={handleLogout} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400" title="Log Out Server">
+                                        <LogOut size={16} />
                                     </button>
-                                )}
-
-                                {currentRound.isStarted && <button onClick={() => setShowRoles(!showRoles)} className="p-2 hover:bg-slate-700 rounded-xl text-slate-400">{showRoles ? <EyeOff size={20} /> : <Eye size={20} />}</button>}
-                                <button onClick={resetRound} className="p-2 hover:bg-slate-700 rounded-xl text-slate-400"><RotateCcw size={20} /></button>
-                                {!currentRound.isStarted && <button onClick={assignRoles} className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg"><Play size={18} fill="currentColor" /> Start Game</button>}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {currentRound.players.map((player, idx) => (
-                            <div key={player.class} onClick={() => !currentRound.isStarted ? toggleAbsence(idx) : !player.isAbsent && toggleAlive(idx)} className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer select-none ${player.isAbsent ? 'bg-slate-900 border-slate-800 opacity-40' : currentRound.isStarted && !player.isAlive ? (player.isRecentlyDead ? 'bg-red-900/40 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-red-900/30 border-red-900/50 opacity-60') : 'bg-slate-700 border-slate-600 hover:border-orange-400'}`}>
-                            {currentRound.isStarted && (
-                                                <button 
-                                                    onClick={(e) => { 
-                                                        e.stopPropagation(); 
-                                                        unlockPlayer(player.class); 
-                                                    }} 
-                                                    className="mb-2 text-[10px] bg-slate-800 hover:bg-slate-600 border border-slate-500 text-slate-300 py-1 px-2 rounded font-bold transition-colors z-10 uppercase"
-                                                >
-                                                    Unlock
-                                                </button>
-                                            )}
-                            {isRevealedSheriff(player.class) && (
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)] z-20" title="Revealed Sheriff">
-                                    <Star fill="currentColor" size={28} />
                                 </div>
-                            )}
-
-                            {currentRound.isStarted && !player.isAbsent && showRoles && <button onClick={(e) => { e.stopPropagation(); toggleLover(idx); }} className={`absolute top-2 left-2 z-10 p-1 rounded-full ${player.isLover ? 'text-pink-500 bg-pink-500/20' : 'text-slate-500'}`}><Heart size={16} fill={player.isLover ? "currentColor" : "none"} /></button>}
-                            <div className="text-[10px] font-black text-slate-400 mb-1 text-center uppercase tracking-wider">Player</div>
-                            <div className={`text-xl sm:text-2xl font-bold text-center leading-tight truncate px-1 ${currentRound.isStarted && !player.isAlive ? 'text-slate-500 line-through' : ''}`}>{player.class}</div>
-                            {player.isAbsent && <div className="absolute top-2 right-2 text-red-500"><UserMinus size={16} /></div>}
-                            {currentRound.isStarted && !player.isAlive && !player.isAbsent && <div className="absolute top-2 right-2 flex flex-col items-end text-red-500"><Skull size={16} className={player.isRecentlyDead ? 'text-red-400' : 'text-red-800'} /></div>}
-                            {player.role && (
-                                <div className="mt-2 pt-2 border-t border-slate-600/50 flex flex-col items-center gap-1">
-                                <div className={`text-xs font-bold uppercase text-center ${showRoles || !player.isAlive ? getRoleColor(player.role, player.isTurned) : 'text-slate-500'}`}>{showRoles || !player.isAlive ? (player.isTurned ? 'Cursed One (Turned)' : player.role) : '••••••'}</div>
-                                {player.role === 'Cursed One' && showRoles && currentRound.isStarted && player.isAlive && <button onClick={(e) => { e.stopPropagation(); toggleTurned(idx); }} className={`text-[10px] font-bold px-2 py-0.5 mt-1 rounded transition-all ${player.isTurned ? 'bg-red-900/50 text-red-400 border border-red-500/50' : 'bg-slate-800 text-slate-300 border border-slate-600'}`}>{player.isTurned ? 'Undo Turn' : 'Mark as Turned'}</button>}
-                                </div>
-                            )}
-
-                            {currentRound.isVotingActive && getPlayerVote(player.class) && player.isAlive && (
-                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-blue-600 border border-blue-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap z-20">
-                                    Voted: {getPlayerVote(player.class)}
-                                </div>
-
-                                {clientState.firstVoters && clientState.firstVoters[player.class] && player.role === 'Prince' && (
-                                            <div className="mt-1 text-xs font-bold text-red-400 bg-red-950/50 rounded p-1 border border-red-900/50">
-                                                Lynched: {clientState.firstVoters[player.class]}
+                                <div className="p-4 space-y-1">
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2">Round Configurations</div>
+                                    {Object.values(roundsData).map(r => (
+                                        <button 
+                                            key={r.id} 
+                                            onClick={() => setActiveRound(r.id)}
+                                            className={`w-full flex items-center justify-between p-3 rounded-xl transition-all font-bold ${activeRound === r.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/10' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-2 h-2 rounded-full ${r.isStarted ? 'bg-emerald-500' : 'bg-slate-600'}`}></div>
+                                                <span>{r.name}</span>
                                             </div>
-                                        )}
-                            )}
+                                            {r.isStarted && <span className="text-[10px] bg-emerald-950/50 text-emerald-400 border border-emerald-900/50 px-2 py-0.5 rounded-md uppercase font-black">{r.roomCode}</span>}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                             
-                            {currentRound.isVotingActive && voteTally[player.class] > 0 && (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-600/95 border-2 border-red-400 text-white text-4xl font-black w-16 h-16 flex items-center justify-center rounded-full shadow-[0_0_20px_rgba(220,38,38,0.8)] z-30 pointer-events-none">
-                                    {voteTally[player.class]}
+                            <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+                                <button onClick={() => setIsEditingRoster(true)} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/50 font-bold p-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-sm">
+                                    <Settings size={16} />
+                                    Engine Configurations
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                            <header className="h-20 bg-slate-900 border-b border-slate-800 px-8 flex items-center justify-between flex-shrink-0">
+                                <div>
+                                    <h2 className="text-xl font-black text-white uppercase tracking-wider">{currentRound.name} Administration Matrix</h2>
+                                    <p className="text-xs text-slate-400 font-medium">Configure attributes, route updates, and monitor cryptographic signals.</p>
                                 </div>
-                            )}
-
-                            </div>
-                        ))}
-                        </div>
-                    </div>
-                    </section>
-
-                    <section className="lg:col-span-5 space-y-6">
-                    <div className="rounded-3xl p-6 border shadow-xl overflow-hidden relative bg-indigo-900/40 border-indigo-700/50">
-                        <div className="flex justify-between items-center mb-4 relative z-10">
-                        <h2 className="text-xl font-bold flex items-center gap-2"><Moon className="text-indigo-400" /> Night {currentRound.nightNumber} Actions</h2>
-                        {currentRound.isStarted && <button onClick={() => { setCompletedNightCalls([]); const newData = { ...roundsData }; newData[activeRound].nightNumber++; setRoundsData(newData); }} className="text-xs font-bold bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40 px-3 py-1 rounded-full">Next Night</button>}
-                        </div>
-                        <div className="space-y-2 relative z-10">
-                        {nightCalls.length > 0 ? nightCalls.map((roleCat, idx) => {
-                            const isDead = !hasAlive(roleCat); const isPastCupid = roleCat === "Cupid" && currentRound.nightNumber > 1; const isWitchUsed = roleCat === "Witch" && currentRound.witchUsedPotion; const isCompleted = isDead || isPastCupid || isWitchUsed || completedNightCalls.includes(roleCat);
-                            return (
-                            <div key={idx} onClick={() => !(isDead || isPastCupid || isWitchUsed) && setCompletedNightCalls(prev => prev.includes(roleCat) ? prev.filter(r => r !== roleCat) : [...prev, roleCat])} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isCompleted ? 'bg-indigo-900/20 opacity-50' : 'bg-indigo-900/50 border-indigo-700/50 cursor-pointer'}`}>
-                                <div className={`w-6 h-6 shrink-0 flex items-center justify-center rounded-full text-xs font-bold ${isCompleted ? 'bg-indigo-900 text-indigo-500' : 'bg-indigo-500/20 text-indigo-400'}`}>{isCompleted ? <CheckCircle2 size={14} /> : idx + 1}</div>
-                                <div className="flex flex-col flex-1">
-                                <span className={`font-semibold ${isCompleted ? 'text-indigo-500 line-through' : 'text-slate-200'}`}>Wake up the <span className="italic">{roleCat === "Doctor" ? "Doctors" : roleCat === "Seer" ? "Seers" : roleCat}</span>{isDead && !isPastCupid && <span className="ml-2 text-[10px] text-red-500">(Dead)</span>}{isPastCupid && <span className="ml-2 text-[10px] text-indigo-400">(Night 1 Only)</span>}</span>
-                                <span className={`text-sm ${isCompleted ? 'text-indigo-700 line-through' : 'text-indigo-300/70'}`}>Action: {getNightInstruction(roleCat)}</span>
-                                </div>
-                            </div>
-                            );
-                        }) : <div className="text-slate-500 italic p-4 text-center border-2 border-dashed border-slate-700 rounded-2xl">Start game to see night order</div>}
-                        </div>
-                    </div>
-                    </section>
-                </main>
-
-                {isManageModalOpen && (
-                    <div className="fixed inset-0 bg-slate-950/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-slate-800 rounded-3xl p-6 border border-slate-700 max-w-xl w-full shadow-2xl relative flex flex-col max-h-[90vh]">
-                            <button onClick={() => {setIsManageModalOpen(false); setIsEditingRoster(false); setEditingRosterId(null);}} className="absolute top-4 right-4 text-slate-400 hover:text-white"><XIcon size={24} /></button>
-                            <div className="flex border-b border-slate-700 mb-6 gap-4">
-                                <button className={`pb-3 font-bold px-2 ${activeSettingsTab === 'groups' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-500 hover:text-slate-300'}`} onClick={() => setActiveSettingsTab('groups')}>Player Groups</button>
-                                <button className={`pb-3 font-bold px-2 ${activeSettingsTab === 'roles' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-slate-500 hover:text-slate-300'}`} onClick={() => setActiveSettingsTab('roles')}>Role Deck</button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto mb-2 custom-scrollbar pr-2 space-y-4">
-                                {activeSettingsTab === 'groups' && (!isEditingRoster ? (
-                                    <><button onClick={() => openRosterEditor()} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-indigo-500/50 rounded-xl text-indigo-400 font-bold hover:bg-indigo-500/10"><Plus size={20} /> Create New Group</button>
-                                    <div className="space-y-3 mt-4">{rosters.map(r => (<div key={r.id} className="flex justify-between items-center bg-slate-700/50 p-4 rounded-xl border border-slate-600"><div><div className="font-bold text-white text-lg">{r.name}</div><div className="text-sm text-slate-400">{r.players.length} players</div></div><div className="flex gap-2"><button onClick={() => openRosterEditor(r)} className="px-3 py-1 bg-slate-600 hover:bg-slate-500 rounded text-sm font-bold text-white">Edit</button><button onClick={() => deleteRoster(r.id)} className="p-1 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded"><Trash2 size={20} /></button></div></div>))}</div></>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div><label className="block text-sm font-bold text-slate-400 mb-2">Group Name</label><input type="text" className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white outline-none focus:border-indigo-500" placeholder="e.g. Wednesday Club..." value={rosterDraftName} onChange={e => setRosterDraftName(e.target.value)} /></div>
-                                        <div><label className="block text-sm font-bold text-slate-400 mb-2">Players (Comma or line separated)</label><textarea className="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-white outline-none focus:border-indigo-500 custom-scrollbar" rows="8" placeholder="Alice, Bob..." value={rosterDraftPlayers} onChange={e => setRosterDraftPlayers(e.target.value)}></textarea></div>
-                                        <div className="flex justify-end gap-3 mt-4"><button onClick={() => setIsEditingRoster(false)} className="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold text-white">Cancel</button><button onClick={saveRosterDraft} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-white">Save Group</button></div>
-                                    </div>
-                                ))}
-                                {activeSettingsTab === 'roles' && (
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between bg-slate-900 border border-slate-700 p-4 rounded-xl">
-                                            <div className="pr-4">
-                                                <div className="font-bold text-white">Use Default Role Progression</div>
-                                                <div className="text-xs text-slate-400 mt-1">Automatically assigns roles based on player count (Classic Rules).</div>
-                                            </div>
-                                            <button onClick={() => setUseDefaultRoles(!useDefaultRoles)} className={`w-12 h-6 rounded-full transition-colors relative shrink-0 ${useDefaultRoles ? 'bg-orange-500' : 'bg-slate-700'}`}>
-                                                <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${useDefaultRoles ? 'left-7' : 'left-1'}`}></div>
+                                <div className="flex items-center gap-4">
+                                    {!currentRound.isStarted ? (
+                                        <div className="flex items-center gap-3">
+                                            <select className="bg-slate-800 border border-slate-700 rounded-xl p-2 text-sm font-bold text-white outline-none focus:border-blue-500 cursor-pointer" value={currentRound.rosterId} onChange={(e) => handleRoundRosterChange(e.target.value)} >
+                                                {rosters.map(r => <option key={r.id} value={r.id}>{r.name} ({r.players.length} seats)</option>)}
+                                            </select>
+                                            <button onClick={startRound} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2 rounded-xl transition-all flex items-center gap-2 text-sm shadow-md shadow-blue-600/20">
+                                                <Play size={16} fill="currentColor" /> Initialize Room Matrix
                                             </button>
                                         </div>
+                                    ) : (
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-center">
+                                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Room Code</div>
+                                                <div className="text-xl font-black text-blue-400 tracking-widest">{currentRound.roomCode}</div>
+                                            </div>
+                                            <div className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-center">
+                                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Night Cycle</div>
+                                                <div className="text-xl font-black text-indigo-400 tracking-widest">#{currentRound.nightNumber}</div>
+                                            </div>
+                                            <button onClick={advanceNight} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-md shadow-indigo-600/10">Advance Night</button>
+                                            <button onClick={endRound} className="bg-red-950/30 text-red-400 border border-red-900/50 hover:bg-red-900/30 font-bold px-4 py-2 rounded-xl text-sm transition-all">Terminate Game</button>
+                                        </div>
+                                    )}
+                                </div>
+                            </header>
 
-                                        {!useDefaultRoles && (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                                                {AVAILABLE_ROLES_LIST.map(role => {
-                                                    const count = roleDeck[role] || 0;
-                                                    return (<div key={role} className="flex justify-between items-center bg-slate-900 border border-slate-700 p-3 rounded-xl"><span className={`font-bold ${count > 0 ? 'text-white' : 'text-slate-500'}`}>{role}</span><div className="flex items-center gap-3 bg-slate-800 rounded-lg p-1 border border-slate-700"><button onClick={() => updateRoleDeck(role, -1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-700 text-slate-300 hover:bg-slate-600 font-bold">-</button><span className="w-4 text-center font-bold">{count}</span><button onClick={() => updateRoleDeck(role, 1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-700 text-slate-300 hover:bg-slate-600 font-bold">+</button></div></div>);
-                                                })}
+                            <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                                {!currentRound.isStarted ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto">
+                                        <div className="w-16 h-16 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center text-slate-500 mb-6">
+                                            <Shuffle size={32} />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-wide">Matrix Offline</h3>
+                                        <p className="text-slate-400 text-sm leading-relaxed mb-6">This round has not been initialized. Select your target player group distribution configuration and trigger deployment.</p>
+                                        <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-left">
+                                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Configured Group: {selectedRoster?.name}</div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {selectedRoster?.players.map(p => <span key={p} className="text-xs bg-slate-950 border border-slate-800 px-2 py-1 rounded-md font-bold text-slate-300">{p}</span>)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between flex-wrap gap-4">
+                                            <div className="flex items-center gap-6">
+                                                <div className="text-sm font-medium"><span className="text-slate-400">Total Pool:</span> <span className="font-black text-white">{currentRound.players.length}</span></div>
+                                                <div className="text-sm font-medium"><span className="text-slate-400">Alive:</span> <span className="font-black text-emerald-400">{currentRound.players.filter(p => p.isAlive && !p.isAbsent).length}</span></div>
+                                                <div className="text-sm font-medium"><span className="text-slate-400">Dead:</span> <span className="font-black text-red-500">{currentRound.players.filter(p => !p.isAlive && !p.isAbsent).length}</span></div>
+                                                {currentRound.players.filter(p => !p.isAbsent && p.role).length > 0 && <div className="text-sm font-medium"><span className="text-slate-400">Roles Configured:</span> <span className="font-black text-blue-400">{currentRound.players.filter(p => !p.isAbsent && p.role).length}</span></div>}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={toggleVoting} className={`px-4 py-1.5 rounded-xl text-sm font-bold border transition-all ${currentRound.isVotingActive ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'bg-slate-800 text-blue-400 border-blue-900/50 hover:bg-slate-700'}`} >
+                                                    {currentRound.isVotingActive ? 'End Voting' : 'Start Vote'}
+                                                </button>
+                                                {currentRound.isVotingActive && (
+                                                    <button onClick={clearAllVotes} className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-700 text-slate-300" title="Flush Current Votes">Clear</button>
+                                                )}
+                                                <button onClick={() => setShowRoles(!showRoles)} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 border border-slate-800" title="Toggle Identity Masking">
+                                                    {showRoles ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                                <button onClick={sortPlayersByNightDeck} className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-700 text-slate-300 flex items-center gap-1">Night Sort</button>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                            {currentRound.players.map((player, idx) => {
+                                                if (player.isAbsent) return null;
+                                                return (
+                                                    <div 
+                                                        key={player.class} 
+                                                        onClick={() => toggleAlive(idx)}
+                                                        className={`bg-slate-900 border rounded-2xl p-5 relative overflow-hidden transition-all duration-200 group cursor-pointer select-none ${!player.isAlive ? 'border-red-900/50 bg-red-950/5 shadow-inner opacity-60' : player.isRecentlyDead ? 'border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'border-slate-800 hover:border-slate-700'}`}
+                                                    >
+                                                        {!player.isAlive && (
+                                                            <div className="absolute top-0 right-0 w-24 h-24 bg-red-600/5 rounded-full blur-2xl"></div>
+                                                        )}
+                                                        
+                                                        <div className="flex justify-between items-start mb-3">
+                                                            <div>
+                                                                <div className="flex items-center">
+                                                                    <span className="font-bold text-lg">{player.class}</span>
+                                                                    {currentRound.isStarted && (
+                                                                        <button 
+                                                                            onClick={(e) => { 
+                                                                                e.stopPropagation(); 
+                                                                                unlockPlayer(player.class); 
+                                                                            }} 
+                                                                            className="ml-2 text-[10px] bg-slate-800 hover:bg-slate-600 border border-slate-500 text-slate-300 py-1 px-2 rounded font-bold transition-colors z-10 uppercase"
+                                                                        >
+                                                                            Unlock
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-black tracking-wider ${!player.isAlive ? 'bg-red-950 text-red-400 border border-red-900/50' : player.isRecentlyDead ? 'bg-orange-950 text-orange-400 border border-orange-900/50 animate-pulse' : 'bg-emerald-950 text-emerald-400 border border-emerald-900/50'}`}>
+                                                                        {!player.isAlive ? 'Eliminated' : player.isRecentlyDead ? 'Dead This Night' : 'Active'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-1">
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); toggleLover(idx); }} 
+                                                                    className={`p-1.5 rounded-lg border transition-all ${player.isLover ? 'bg-pink-950 border-pink-700 text-pink-400 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-600 hover:text-slate-400'}`} 
+                                                                    title="Toggle Cupid Link Flag"
+                                                                >
+                                                                    <Heart size={14} fill={player.isLover ? 'currentColor' : 'none'} />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); toggleTurned(idx); }} 
+                                                                    className={`p-1.5 rounded-lg border transition-all ${player.isTurned ? 'bg-orange-950 border-orange-700 text-orange-400 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-600 hover:text-slate-400'}`} 
+                                                                    title="Toggle Turned Status Condition"
+                                                                >
+                                                                    <Moon size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {player.role && (
+                                                            <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center">
+                                                                <span className={`text-xs font-bold tracking-wider uppercase transition-all duration-200 ${showRoles ? 'text-blue-400 font-black' : 'text-slate-600 bg-slate-950 px-2 py-0.5 rounded select-none filter blur-sm group-hover:blur-none'}`}>
+                                                                    {player.role}
+                                                                </span>
+                                                                {isRevealedSheriff(player.class) && (
+                                                                    <span className="text-[10px] bg-yellow-950 text-yellow-500 border border-yellow-800/50 font-black px-2 py-0.5 rounded flex items-center gap-1 shadow-sm uppercase tracking-wider animate-bounce">
+                                                                        ★ Sheriff
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {currentRound.isVotingActive && (
+                                                            <div className="mt-2 relative h-6">
+                                                                {getPlayerVote(player.class) && (
+                                                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-600 border border-blue-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap z-20">
+                                                                        Voted: {getPlayerVote(player.class)}
+                                                                    </div>
+                                                                )}
+                                                                {clientState.firstVoters && clientState.firstVoters[player.class] && player.role === 'Prince' && (
+                                                                    <div className="mt-1 text-xs font-bold text-red-400 bg-red-950/50 rounded p-1 border border-red-900/50">
+                                                                        Lynched: {clientState.firstVoters[player.class]}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {currentRound.isVotingActive && voteTally[player.class] > 0 && (
+                                                            <div className="absolute top-1.5 left-1.5 bg-blue-600 border border-blue-400 text-white font-black text-xs w-5 h-5 flex items-center justify-center rounded-lg shadow-md animate-pulse">
+                                                                {voteTally[player.class]}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {currentRound.players.some(p => p.isAbsent) && (
+                                            <div className="pt-4 border-t border-slate-800">
+                                                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Excluded From Pool ({currentRound.players.filter(p => p.isAbsent).length})</div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {currentRound.players.map((p, i) => p.isAbsent && (
+                                                        <button key={p.class} onClick={() => toggleAbsent(i)} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-500 hover:text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all">
+                                                            <Plus size={12} /> Seat {p.class}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
                                 )}
-                            </div>
+                            </main>
                         </div>
+
+                        {isEditingRoster && (
+                            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                                <div className="bg-slate-900 border border-slate-800 w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                                    <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                                        <div>
+                                            <h3 className="text-2xl font-black text-white uppercase tracking-wider">Engine Customizations Matrix</h3>
+                                            <p className="text-xs text-slate-400 mt-0.5">Control registration records and runtime random allocation generation pools.</p>
+                                        </div>
+                                        <button onClick={() => setIsEditingRoster(false)} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 border border-slate-800">
+                                            <XIcon size={18} />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex border-b border-slate-800 px-6 bg-slate-900/30">
+                                        <button className={`pb-3 pt-4 font-bold px-2 text-sm transition-all border-b-2 mr-6 ${activeSettingsTab === 'groups' ? 'text-indigo-400 border-indigo-500' : 'text-slate-400 border-transparent hover:text-slate-200'}`} onClick={() => setActiveSettingsTab('groups')}>Dynamic Registrations</button>
+                                        <button className={`pb-3 pt-4 font-bold px-2 text-sm transition-all border-b-2 ${activeSettingsTab === 'roles' ? 'text-orange-400 border-orange-500' : 'text-slate-400 border-transparent hover:text-slate-200'}`} onClick={() => setActiveSettingsTab('roles')}>Allocation Deck Pool</button>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-slate-950/20">
+                                        {activeSettingsTab === 'groups' ? (
+                                            <div className="grid md:grid-cols-3 gap-6 h-full">
+                                                <div className="md:col-span-1 space-y-2 border-r border-slate-800/50 pr-4">
+                                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Available Pools</div>
+                                                    {rosters.map(r => (
+                                                        <div key={r.id} className="group/item flex items-center justify-between p-2 rounded-xl hover:bg-slate-800/60 transition-all">
+                                                            <button onClick={() => openRosterEdit(r)} className="flex-1 text-left font-bold text-sm text-slate-300 group-hover/item:text-white truncate">
+                                                                {r.name}
+                                                                <span className="block text-[10px] font-medium text-slate-500 mt-0.5">{r.players.length} registered entries</span>
+                                                            </button>
+                                                            <button onClick={() => deleteRoster(r.id)} className="p-1.5 opacity-0 group-hover/item:opacity-100 hover:bg-red-950/50 text-red-500 border border-transparent hover:border-red-900/30 rounded-lg transition-all">
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                    <div className="pt-2">
+                                                        <button onClick={openRosterCreate} className="w-full bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-800 font-bold p-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all">
+                                                            <Plus size={14} /> Add New Entry Group
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="md:col-span-2 space-y-4">
+                                                    <div className="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl space-y-4">
+                                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Group Identity Editor</div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Pool Identifier Description</label>
+                                                            <input type="text" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white font-bold text-sm outline-none focus:border-indigo-500" placeholder="e.g., Block A Match Matrix" value={rosterDraftName} onChange={(e) => setRosterDraftName(e.target.value)} />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Seat IDs Matrix (One allocation item per newline)</label>
+                                                            <textarea rows="6" className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white font-mono text-sm outline-none focus:border-indigo-500 custom-scrollbar resize-none" placeholder="1A&#10;1B&#10;1C" value={rosterDraftPlayers} onChange={(e) => setRosterDraftPlayers(e.target.value)}></textarea>
+                                                        </div>
+                                                        <div className="flex justify-end pt-2">
+                                                            <button onClick={saveRoster} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-2 rounded-xl text-sm transition-all shadow-md shadow-indigo-600/10">Commit Registration Profile</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-6">
+                                                <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between">
+                                                    <div>
+                                                        <div className="text-sm font-bold text-white">Dynamic Balancing Deck Override</div>
+                                                        <div className="text-xs text-slate-400 mt-0.5">Automate werewolf proportion calculation dynamically based on the total active table connection count.</div>
+                                                    </div>
+                                                    <div className="flex bg-slate-950 border border-slate-800 rounded-xl p-1">
+                                                        <button onClick={() => handleToggleDefaultRoles(true)} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${useDefaultRoles ? 'bg-orange-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>Standard Config</button>
+                                                        <button onClick={() => handleToggleDefaultRoles(false)} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${!useDefaultRoles ? 'bg-orange-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>Deck Matrix Mod</button>
+                                                    </div>
+                                                </div>
+
+                                                {!useDefaultRoles && (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                        {Object.keys(ROLE_DESCRIPTIONS).map(role => {
+                                                            const count = roleDeck[role] || 0;
+                                                            return (
+                                                                <div key={role} className="flex justify-between items-center bg-slate-900 border border-slate-800 p-3 rounded-xl">
+                                                                    <span className={`font-bold text-sm ${count > 0 ? 'text-white' : 'text-slate-500'}`}>{role}</span>
+                                                                    <div className="flex items-center gap-3 bg-slate-950 rounded-lg p-1 border border-slate-800">
+                                                                        <button onClick={() => updateRoleDeck(role, -1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold">-</button>
+                                                                        <span className="w-4 text-center font-bold text-sm">{count}</span>
+                                                                        <button onClick={() => updateRoleDeck(role, 1)} className="w-6 h-6 flex items-center justify-center rounded bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        <style>{`.custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }`}</style>
                     </div>
-                )}
-                <style>{`.custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: transparent; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }`}</style>
-                </div>
-            );
+                );
+            }
+
+            return null;
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
